@@ -36,7 +36,7 @@ The model of the pokemon should be the same model as if they pokemon where activ
 - Upon the model's reference fainting, the model shall play the fainting animation and then stop all motion, with a grey coloration afterwards
 
 The model should update upon using transform. The model should NOT update upon having an active substitute.
-The model is on the left side of the card.
+The model is on the left side of the card for the left side trainer and the right side of the card for the right side trainer
 
 Large pokemon such as onix should have their card's model's scale changes so that the face(s) of hte pokemon displays prominently when not fainted.
 
