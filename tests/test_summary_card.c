@@ -110,5 +110,10 @@ int main(void) {
     CHECK_EQ(hu_hp_fill(1, 999, 48), 1);
     CHECK_EQ(hu_hp_fill(0, 999, 48), 0);
     CHECK_EQ(hu_hp_fill(50, 100, 48), 24);
+
+    /* Type colours: unknown ids fall back to ???, text colours are lighter. */
+    CHECK_EQ(hu_type_color(HU_TYPE_FIRE).r, 240);
+    CHECK_EQ(hu_type_color((hu_type)200).g, hu_type_color(HU_TYPE_UNKNOWN).g);
+    CHECK(hu_type_text_color(HU_TYPE_DRAGON).r > hu_type_color(HU_TYPE_DRAGON).r);
     TEST_DONE();
 }

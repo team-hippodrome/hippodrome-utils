@@ -273,3 +273,40 @@ int hu_hp_fill(uint16_t hp, uint16_t max_hp, int width) {
     fill = (long)hp * width / max_hp;
     return fill < 1 ? 1 : (int)fill;
 }
+
+hu_rgb hu_type_color(hu_type type) {
+    static const hu_rgb kColors[HU_TYPE_COUNT] = {
+        { 168, 168, 120 }, /* normal */
+        { 192, 48, 40 },   /* fighting */
+        { 168, 144, 240 }, /* flying */
+        { 160, 64, 160 },  /* poison */
+        { 224, 192, 104 }, /* ground */
+        { 184, 160, 56 },  /* rock */
+        { 168, 184, 32 },  /* bug */
+        { 112, 88, 152 },  /* ghost */
+        { 184, 184, 208 }, /* steel */
+        { 240, 128, 48 },  /* fire */
+        { 104, 144, 240 }, /* water */
+        { 120, 200, 80 },  /* grass */
+        { 248, 208, 48 },  /* electric */
+        { 248, 88, 136 },  /* psychic */
+        { 152, 216, 216 }, /* ice */
+        { 112, 56, 248 },  /* dragon */
+        { 112, 88, 72 },   /* dark */
+        { 238, 153, 172 }, /* fairy */
+        { 104, 160, 144 }, /* ??? */
+    };
+    if ((unsigned)type >= HU_TYPE_COUNT) {
+        type = HU_TYPE_UNKNOWN;
+    }
+    return kColors[type];
+}
+
+hu_rgb hu_type_text_color(hu_type type) {
+    hu_rgb c = hu_type_color(type);
+    /* 40% toward white: the darker colours (ghost, dragon, dark, fighting) stay readable on a dark background */
+    c.r = (uint8_t)(c.r + (255 - c.r) * 2 / 5);
+    c.g = (uint8_t)(c.g + (255 - c.g) * 2 / 5);
+    c.b = (uint8_t)(c.b + (255 - c.b) * 2 / 5);
+    return c;
+}

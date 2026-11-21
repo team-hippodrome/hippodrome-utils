@@ -139,6 +139,36 @@ hu_model_look hu_card_model_look(const hu_card* card, uint16_t faint_length);
  * aqua, burn red). */
 hu_rgb hu_status_color(hu_status status);
 
+/* Move and Pokémon types, in a fixed order of the library's own (each port maps its game's type ids onto it). Room for
+ * the types of later generations and mods. */
+typedef enum hu_type {
+    HU_TYPE_NORMAL = 0,
+    HU_TYPE_FIGHTING,
+    HU_TYPE_FLYING,
+    HU_TYPE_POISON,
+    HU_TYPE_GROUND,
+    HU_TYPE_ROCK,
+    HU_TYPE_BUG,
+    HU_TYPE_GHOST,
+    HU_TYPE_STEEL,
+    HU_TYPE_FIRE,
+    HU_TYPE_WATER,
+    HU_TYPE_GRASS,
+    HU_TYPE_ELECTRIC,
+    HU_TYPE_PSYCHIC,
+    HU_TYPE_ICE,
+    HU_TYPE_DRAGON,
+    HU_TYPE_DARK,
+    HU_TYPE_FAIRY,
+    HU_TYPE_UNKNOWN, /* ??? (Curse in Gen 2), or an id the port does not know */
+    HU_TYPE_COUNT
+} hu_type;
+
+/* The type's usual colour (Normal tan, Fire orange, Water blue, ...). */
+hu_rgb hu_type_color(hu_type type);
+/* The same colour lightened so text in it reads on a dark card. */
+hu_rgb hu_type_text_color(hu_type type);
+
 typedef enum hu_hp_band { HU_HP_GREEN = 0, HU_HP_YELLOW = 1, HU_HP_RED = 2 } hu_hp_band;
 /* The Game Boy's HP bar colours: green above about 56% (27 of 48 pixels), yellow down to about 21% (10 of 48), then
  * red. */
