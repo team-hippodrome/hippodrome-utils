@@ -10,4 +10,4 @@ This repository contains utilities and document used by Team Hippodrome for thei
 # Design principals
 
 1. If a feature requires branching for all three games, it should be implemented in the port's repo, not here.
-2. 
+2. Windows for features should expand and then fill when opening, and defill and contract when closing (this is how stadium does most of its window)
