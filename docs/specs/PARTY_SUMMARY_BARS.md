@@ -45,3 +45,7 @@ Moves are only revealed as they are used in multiplayer.
 
 ## Speed stat estimate
 see ./SPEED_STAT_ESTIMATE.md
+
+
+# Location
+The summary bars should appear in 16:9 mode only when the user has an ultrawide display (or really, when there is room). Otherwise, 16:9 mode and summary bars are not compatible.
