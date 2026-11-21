@@ -9,6 +9,7 @@ Cards comprise of:
 3. HP bar
 4. A view of known moves of the pokemon
 5. A listing of the (estimated) speed stat of a pokemon
+6. Name (the Pokemon's nickname, or species name if no nickname exists)
 
 We call the  pokemon the card stores information of its referent. 
 
@@ -19,6 +20,10 @@ A card can have the following stats:
 - Statused (volatile Status condition like poison, sleep)
 - Fainted
 - Unknown (for when the opposing side has not reveal all pokemon picked for battle)
+
+The Card state should  only update when the visual indication that it updates (status gain, fainting, switch out to reveal last unrevealed picked pokemon). 
+
+All  pokemon not picked can be labeled Not Picked instead of unknown only when all picked pokemon for that side have been revealed (have switched in at least once)
 
 ## Model
 The model of the pokemon should be the same model as if they pokemon where active in battle.
@@ -37,6 +42,8 @@ Large pokemon such as onix should have their card's model's scale changes so tha
 
 ## HP Bar
 The HP bar is the first UI element shown on the right, the moves under it and the speed stat estimate under moves
+
+The card should track display hp, not internal game HP.
 
 ## Moves
 All moves are revealed on the player's Bar in single player. Moves on the COM's side are reveal only as they are used, or if trainer memory is on, according to the save files' trainer memory.
