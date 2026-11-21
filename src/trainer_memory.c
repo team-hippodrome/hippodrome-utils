@@ -4,10 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif
+#include "file_io.h"
 
 struct hu_tm {
     hu_tm_trainer* trainers;
@@ -265,32 +262,6 @@ bool hu_tm_dirty(const hu_tm* tm) {
 #define MON_SIZE (4 + 2 * HU_TM_MOVES + 4)
 #define RECORD_SIZE (8 + HU_TM_TEAM_MAX * MON_SIZE + HU_TM_NAME_BYTES)
 
-static uint32_t crc32_bytes(const uint8_t* p, size_t n) {
-    uint32_t c = 0xFFFFFFFFu;
-    for (size_t i = 0; i < n; i++) {
-        c ^= p[i];
-        for (int k = 0; k < 8; k++) {
-            c = (c >> 1) ^ (0xEDB88320u & (0u - (c & 1u)));
-        }
-    }
-    return c ^ 0xFFFFFFFFu;
-}
-
-static void put16(uint8_t* p, uint16_t v) {
-    p[0] = (uint8_t)v;
-    p[1] = (uint8_t)(v >> 8);
-}
-static void put32(uint8_t* p, uint32_t v) {
-    put16(p, (uint16_t)v);
-    put16(p + 2, (uint16_t)(v >> 16));
-}
-static uint16_t get16(const uint8_t* p) {
-    return (uint16_t)(p[0] | (p[1] << 8));
-}
-static uint32_t get32(const uint8_t* p) {
-    return get16(p) | ((uint32_t)get16(p + 2) << 16);
-}
-
 size_t hu_tm_serialize(const hu_tm* tm, uint8_t** out) {
     size_t size = HEADER_SIZE + tm->count * RECORD_SIZE + 4;
     uint8_t* buf = (uint8_t*)calloc(1, size);
@@ -300,9 +271,9 @@ size_t hu_tm_serialize(const hu_tm* tm, uint8_t** out) {
         return 0;
     }
     memcpy(buf, TM_MAGIC, 4);
-    put16(buf + 4, TM_VERSION);
-    put16(buf + 6, RECORD_SIZE);
-    put32(buf + 8, (uint32_t)tm->count);
+    hu_put16(buf + 4, TM_VERSION);
+    hu_put16(buf + 6, RECORD_SIZE);
+    hu_put32(buf + 8, (uint32_t)tm->count);
     p = buf + HEADER_SIZE;
     for (size_t i = 0; i < tm->count; i++) {
         const hu_tm_trainer* t = &tm->trainers[i];
@@ -324,15 +295,15 @@ size_t hu_tm_serialize(const hu_tm* tm, uint8_t** out) {
             q[2] = m->seen;
             q[3] = m->flags;
             for (int s = 0; s < HU_TM_MOVES; s++) {
-                put16(q + 4 + 2 * s, m->moves[s]);
+                hu_put16(q + 4 + 2 * s, m->moves[s]);
             }
-            put16(q + 4 + 2 * HU_TM_MOVES, m->speed.min);
-            put16(q + 6 + 2 * HU_TM_MOVES, m->speed.max);
+            hu_put16(q + 4 + 2 * HU_TM_MOVES, m->speed.min);
+            hu_put16(q + 6 + 2 * HU_TM_MOVES, m->speed.max);
         }
         memcpy(p + 8 + HU_TM_TEAM_MAX * MON_SIZE, t->name, HU_TM_NAME_BYTES);
         p += RECORD_SIZE;
     }
-    put32(p, crc32_bytes(buf, size - 4));
+    hu_put32(p, hu_crc32(buf, size - 4));
     *out = buf;
     return size;
 }
@@ -342,13 +313,13 @@ hu_tm_io hu_tm_deserialize(hu_tm* tm, const uint8_t* data, size_t size) {
     unsigned record_size;
     const uint8_t* p;
     hu_tm_clear(tm);
-    if (size < HEADER_SIZE + 4 || memcmp(data, TM_MAGIC, 4) != 0 || get16(data + 4) != TM_VERSION) {
+    if (size < HEADER_SIZE + 4 || memcmp(data, TM_MAGIC, 4) != 0 || hu_get16(data + 4) != TM_VERSION) {
         return HU_TM_CORRUPT;
     }
-    record_size = get16(data + 6);
-    count = get32(data + 8);
+    record_size = hu_get16(data + 6);
+    count = hu_get32(data + 8);
     if (record_size < RECORD_SIZE || (size - HEADER_SIZE - 4) / record_size < count ||
-        size != HEADER_SIZE + (size_t)count * record_size + 4 || get32(data + size - 4) != crc32_bytes(data, size - 4)) {
+        size != HEADER_SIZE + (size_t)count * record_size + 4 || hu_get32(data + size - 4) != hu_crc32(data, size - 4)) {
         return HU_TM_CORRUPT;
     }
     p = data + HEADER_SIZE;
@@ -369,10 +340,10 @@ hu_tm_io hu_tm_deserialize(hu_tm* tm, const uint8_t* data, size_t size) {
             m->seen = q[2];
             m->flags = q[3];
             for (int s = 0; s < HU_TM_MOVES; s++) {
-                m->moves[s] = get16(q + 4 + 2 * s);
+                m->moves[s] = hu_get16(q + 4 + 2 * s);
             }
-            m->speed.min = get16(q + 4 + 2 * HU_TM_MOVES);
-            m->speed.max = get16(q + 6 + 2 * HU_TM_MOVES);
+            m->speed.min = hu_get16(q + 4 + 2 * HU_TM_MOVES);
+            m->speed.max = hu_get16(q + 6 + 2 * HU_TM_MOVES);
         }
         memcpy(t->name, p + 8 + HU_TM_TEAM_MAX * MON_SIZE, HU_TM_NAME_BYTES);
         t->name[HU_TM_NAME_BYTES - 1] = 0;
@@ -381,53 +352,17 @@ hu_tm_io hu_tm_deserialize(hu_tm* tm, const uint8_t* data, size_t size) {
     return HU_TM_OK;
 }
 
-static FILE* open_utf8(const char* path, const char* mode) {
-#ifdef _WIN32
-    wchar_t wpath[1024], wmode[8];
-    if (MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, 1024) == 0 ||
-        MultiByteToWideChar(CP_UTF8, 0, mode, -1, wmode, 8) == 0) {
-        return NULL;
-    }
-    return _wfopen(wpath, wmode);
-#else
-    return fopen(path, mode);
-#endif
-}
-
-static int replace_file(const char* from, const char* to) {
-#ifdef _WIN32
-    wchar_t wfrom[1024], wto[1024];
-    if (MultiByteToWideChar(CP_UTF8, 0, from, -1, wfrom, 1024) == 0 ||
-        MultiByteToWideChar(CP_UTF8, 0, to, -1, wto, 1024) == 0) {
-        return -1;
-    }
-    return MoveFileExW(wfrom, wto, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH) ? 0 : -1;
-#else
-    return rename(from, to);
-#endif
-}
-
 hu_tm_io hu_tm_load(hu_tm* tm, const char* path) {
-    FILE* f = open_utf8(path, "rb");
     uint8_t* data;
-    long size;
+    size_t size;
     hu_tm_io r;
+    int rc;
     hu_tm_clear(tm);
-    if (f == NULL) {
-        return HU_TM_MISSING;
+    rc = hu_read_file(path, &data, &size);
+    if (rc != 0) {
+        return rc > 0 ? HU_TM_MISSING : HU_TM_IO_ERROR;
     }
-    if (fseek(f, 0, SEEK_END) != 0 || (size = ftell(f)) < 0 || fseek(f, 0, SEEK_SET) != 0) {
-        fclose(f);
-        return HU_TM_IO_ERROR;
-    }
-    data = (uint8_t*)malloc(size > 0 ? (size_t)size : 1);
-    if (data == NULL || fread(data, 1, (size_t)size, f) != (size_t)size) {
-        free(data);
-        fclose(f);
-        return HU_TM_IO_ERROR;
-    }
-    fclose(f);
-    r = hu_tm_deserialize(tm, data, (size_t)size);
+    r = hu_tm_deserialize(tm, data, size);
     free(data);
     return r;
 }
@@ -435,33 +370,15 @@ hu_tm_io hu_tm_load(hu_tm* tm, const char* path) {
 hu_tm_io hu_tm_save(hu_tm* tm, const char* path) {
     uint8_t* data;
     size_t size = hu_tm_serialize(tm, &data);
-    size_t len = strlen(path);
-    char* tmp;
-    FILE* f;
-    bool ok;
+    int rc;
     if (size == 0) {
         return HU_TM_IO_ERROR;
     }
-    tmp = (char*)malloc(len + 5);
-    if (tmp == NULL) {
-        free(data);
-        return HU_TM_IO_ERROR;
-    }
-    memcpy(tmp, path, len);
-    memcpy(tmp + len, ".tmp", 5);
-    f = open_utf8(tmp, "wb");
-    ok = f != NULL && fwrite(data, 1, size, f) == size;
-    if (f != NULL) {
-        ok = (fflush(f) == 0) && ok;
-        ok = (fclose(f) == 0) && ok;
-    }
+    rc = hu_write_file(path, data, size);
     free(data);
-    if (!ok || replace_file(tmp, path) != 0) {
-        remove(tmp);
-        free(tmp);
+    if (rc != 0) {
         return HU_TM_IO_ERROR;
     }
-    free(tmp);
     tm->dirty = false;
     return HU_TM_OK;
 }
