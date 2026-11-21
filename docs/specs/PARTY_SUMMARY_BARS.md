@@ -36,7 +36,7 @@ The model is on the left side of the card.
 Large pokemon such as onix should have their card's model's scale changes so that the face(s) of hte pokemon displays prominently when not fainted.
 
 ## HP Bar
-The HP bar is the first UI 
+The HP bar is the first UI element shown on the right, the moves under it and the speed stat estimate under moves
 
 ## Moves
 All moves are revealed on the player's Bar in single player. Moves on the COM's side are reveal only as they are used, or if trainer memory is on, according to the save files' trainer memory.
