@@ -5,4 +5,6 @@ This feature lets players set the minimum and maximum Stat Exp and DVs rental an
 
 This setting goes in the launcher and the Esc menu.
 
-By default, the values should be set to "vanilla" to use vanilla settings. 
+By default, the values should be set to "vanilla" to use vanilla settings. A slider should appear when the player turns the enhancement on to set the appropriate values. 
+
+Errors should appear for situations where the maximum value is less than the minimum value for a setting.
