@@ -26,4 +26,4 @@ An queued order is canceled:
 - If the player is still in any state other than `Move_Queued` or `Switch_Queued` when move resolution finishes
 - The order becomes illegal (due to fainting, freeze, trapping, etc.)
 
-Command selection should follow the delay the COM has when selecting commands, to give players some time to correct a last-second cancel request.
+Command selection should follow send the order as soon as possible (10 frames in zero).
