@@ -76,3 +76,23 @@ Example:
 |id|md5|address|jp|en|es|de|pt|ko|fr|it|
 |---|---|---|---|---|---|---|---|---|---|---|
 BURGLAR_ARCANINE|e163a4b50e6e2f74c8ba807434ee2cf3|82402390 82403310 82404290 82405210|どろンディ|Thiefcanine|Ladricanine|Diebkani|Ladracanine|도둑디|Volcanin|Ladrocanine
+
+## Language Selection Procedure
+
+Upon the user first booting the port: if their system locale is different from the language of their provided ROM AND their locale is a supported language, they should get the following prompts translated into both their locale and ROM language.
+
+
+For official language:
+> You have uploaded a {ROM language} ROM but it has been detected your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available. To use the official {locale language} script, please dump a ROM from that region and upload it in the launcher.
+> Would you like to use use AI-generated translation?
+> No, continue in {ROM language}
+> Yes, use AI-generated {locale language} translation. 
+
+For unofficial languages:
+> It has been detected your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available.
+> Would you like to use use AI-generated translation?
+> No, continue in {ROM language}
+> Yes, use AI-generated {locale language} translation. 
+
+Followed by
+> This can be changed any time in the options menu. We welcome corrections to translations on our GitHub or Discord. Have fun!
