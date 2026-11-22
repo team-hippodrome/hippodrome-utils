@@ -18,6 +18,7 @@ it in, and draws the result. Nothing here knows a game's memory layout.
 | `hippodrome/move_description.h` | Which move's description the held D-pad direction shows in the move menu, with its window's animation | MIDBATTLE_MOVE_DESCRIPTION |
 | `hippodrome/order_queue.h` | The order queue's display state machine (Hidden, Showing, Move/Switch_Select, Move/Switch_Queued), its cancel rules and the COM-timed entering of the order (`hu_oq_command_frame`) | ORDER_QUEUEING |
 | `hippodrome/text_font.h` | Glyphs for translated text in the games' font style (white fill, dark outline from 16 px) as IA8 textures, from GNU Unifont bitmaps or the Pop outline font, and UTF-8 decoding. The fonts and their licences are in `assets/font` (`HIPPODROME_UTILS_FONT_DIR` in CMake) | TRANSLATION |
+| `hippodrome/stat_difficulty.h` | DV and Stat Exp difficulty: a vanilla-or-custom range per group (rental, opponent), its errors (maximum below minimum) and the clamp of the DV word and the five stat exp values (`hu_sd_apply_dvs`, `hu_sd_apply_stat_exp`); the Gen 1/2 HP DV (`hu_dv_hp`) | DV_STATEXP_DIFFICULTY |
 | `hippodrome/window_anim.h` | The timing of a window that expands, then fills (and empties, then contracts): design principle 2 | AGENTS.md |
 
 Formulas come from the decompilations (pokestadium0's `Battle_ComputePokemonStat`, the stage table at `D_8218ADF4`,
