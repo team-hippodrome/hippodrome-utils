@@ -46,6 +46,19 @@ int16_t hu_hue_step(int16_t shift, int direction);
 /* `shift` in whole degrees, 0..359. */
 int hu_hue_degrees(int16_t shift);
 
+/* Restricted hues: only the ones the game itself can give the species, its range [min_degrees, max_degrees] from the
+ * species table (the one hu_hue_nickname_shift takes; every species' range holds 0, the original colours). A range of
+ * a full turn or more allows every hue. */
+/* `shift` as a signed hue, -180 degrees (exclusive) to +180 (inclusive): 330 degrees is -30. */
+int16_t hu_hue_signed(int16_t shift);
+/* True when `shift` lies in [min_degrees, max_degrees] (going round the wheel the short way, as hu_hue_signed). */
+bool hu_hue_in_range(int16_t shift, int16_t min_degrees, int16_t max_degrees);
+/* `shift` moved to the nearer end of the range when it lies outside it (unchanged inside it). */
+int16_t hu_hue_clamp(int16_t shift, int16_t min_degrees, int16_t max_degrees);
+/* hu_hue_step inside the range: the picker's steps (0 and every HU_HUE_STEP) that lie in it plus its two ends, without
+ * going round the wheel; at an end it stays there. A hue outside the range starts from its hu_hue_clamp. */
+int16_t hu_hue_step_in_range(int16_t shift, int direction, int16_t min_degrees, int16_t max_degrees);
+
 typedef struct hu_hue_store hu_hue_store;
 
 hu_hue_store* hu_hue_store_new(void);

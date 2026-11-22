@@ -29,6 +29,36 @@ int main(void) {
     CHECK_EQ(hu_hue_degrees(-1920), 330);
     CHECK_EQ(hu_hue_degrees(64 * 90), 90);
 
+    /* restricted to a species' range (Stadium Zero's Charizard: -20..15 degrees) */
+    CHECK_EQ(hu_hue_signed(HU_HUE_FULL_TURN - 1920), -1920);
+    CHECK_EQ(hu_hue_signed(180 * 64), 180 * 64);
+    CHECK(hu_hue_in_range(0, -20, 15));
+    CHECK(hu_hue_in_range(HU_HUE_FULL_TURN - 20 * 64, -20, 15)); /* 340 degrees = -20 */
+    CHECK(!hu_hue_in_range(16 * 64, -20, 15));
+    CHECK(hu_hue_in_range(200 * 64, -180, 180)); /* a full turn allows every hue */
+    CHECK_EQ(hu_hue_clamp(10 * 64, -20, 15), 10 * 64);
+    CHECK_EQ(hu_hue_clamp(60 * 64, -20, 15), 15 * 64);
+    CHECK_EQ(hu_hue_clamp(HU_HUE_FULL_TURN - 90 * 64, -20, 15), -20 * 64); /* 270 = -90: nearer the bottom */
+    CHECK_EQ(hu_hue_clamp(180 * 64, -20, 15), -20 * 64); /* 165 above the top, 160 below the bottom */
+    CHECK_EQ(hu_hue_clamp(-175 * 64, -20, 15), -20 * 64);
+    CHECK_EQ(hu_hue_step_in_range(0, 1, -20, 15), 15 * 64);
+    CHECK_EQ(hu_hue_step_in_range(15 * 64, 1, -20, 15), 15 * 64); /* stays at the top */
+    CHECK_EQ(hu_hue_step_in_range(0, -1, -20, 15), -15 * 64);
+    CHECK_EQ(hu_hue_step_in_range(-15 * 64, -1, -20, 15), -20 * 64); /* the bottom end itself */
+    CHECK_EQ(hu_hue_step_in_range(-20 * 64, -1, -20, 15), -20 * 64);
+    CHECK_EQ(hu_hue_step_in_range(-20 * 64, 1, -20, 15), -15 * 64);
+    CHECK_EQ(hu_hue_step_in_range(-1000, 1, -20, 15), -15 * 64); /* a nickname's -15.6 goes up to -15 */
+    CHECK_EQ(hu_hue_step_in_range(120 * 64, -1, -20, 15), 0); /* outside: from the clamped 15 */
+    CHECK_EQ(hu_hue_step_in_range(0, -1, -180, 180), HU_HUE_FULL_TURN - HU_HUE_STEP); /* full turn: as hu_hue_step */
+    {
+        /* Pikachu -15..25: 0, 15, 25, 25 going up */
+        int16_t v = hu_hue_step_in_range(0, 1, -15, 25);
+        CHECK_EQ(v, 15 * 64);
+        v = hu_hue_step_in_range(v, 1, -15, 25);
+        CHECK_EQ(v, 25 * 64);
+        CHECK_EQ(hu_hue_step_in_range(v, -1, -15, 25), 15 * 64);
+    }
+
     /* fingerprints */
     {
         const char a[] = "ピカチュウ", b[] = "ピカチュウ!";

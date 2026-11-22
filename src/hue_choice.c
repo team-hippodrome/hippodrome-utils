@@ -48,6 +48,60 @@ int hu_hue_degrees(int16_t shift) {
     return (int)(wrap(shift) / HU_HUE_UNITS_PER_DEGREE);
 }
 
+static bool full_range(int16_t min_degrees, int16_t max_degrees) {
+    return (int32_t)max_degrees - (int32_t)min_degrees >= 360;
+}
+
+int16_t hu_hue_signed(int16_t shift) {
+    int32_t v = wrap(shift);
+    return (int16_t)(v > HU_HUE_FULL_TURN / 2 ? v - HU_HUE_FULL_TURN : v);
+}
+
+bool hu_hue_in_range(int16_t shift, int16_t min_degrees, int16_t max_degrees) {
+    int32_t v = hu_hue_signed(shift);
+    if (full_range(min_degrees, max_degrees)) {
+        return true;
+    }
+    return v >= (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE && v <= (int32_t)max_degrees * HU_HUE_UNITS_PER_DEGREE;
+}
+
+int16_t hu_hue_clamp(int16_t shift, int16_t min_degrees, int16_t max_degrees) {
+    int32_t lo = (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE;
+    int32_t hi = (int32_t)max_degrees * HU_HUE_UNITS_PER_DEGREE;
+    int32_t v = hu_hue_signed(shift);
+    if (hu_hue_in_range(shift, min_degrees, max_degrees)) {
+        return shift;
+    }
+    /* outside: the nearer end, measured round the wheel (the gap above hi wraps to below lo) */
+    {
+        int32_t above = wrap(v - hi);
+        int32_t below = wrap(lo - v);
+        return (int16_t)(above <= below ? hi : lo);
+    }
+}
+
+int16_t hu_hue_step_in_range(int16_t shift, int direction, int16_t min_degrees, int16_t max_degrees) {
+    int32_t lo = (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE;
+    int32_t hi = (int32_t)max_degrees * HU_HUE_UNITS_PER_DEGREE;
+    int32_t v;
+    int32_t next;
+    if (full_range(min_degrees, max_degrees)) {
+        return hu_hue_step(shift, direction);
+    }
+    v = hu_hue_signed(hu_hue_clamp(shift, min_degrees, max_degrees));
+    if (direction >= 0) {
+        /* the next step strictly above (floor division, v may be negative), capped at the top end */
+        int32_t k = (v >= 0 ? v / HU_HUE_STEP : -((-v + HU_HUE_STEP - 1) / HU_HUE_STEP)) + 1;
+        next = k * HU_HUE_STEP;
+        if (next > hi) next = hi;
+    } else {
+        int32_t k = (v >= 0 ? (v + HU_HUE_STEP - 1) / HU_HUE_STEP : -(-v / HU_HUE_STEP)) - 1;
+        next = k * HU_HUE_STEP;
+        if (next < lo) next = lo;
+    }
+    return (int16_t)next;
+}
+
 typedef struct hue_entry {
     hu_hue_id id;
     int16_t shift;
