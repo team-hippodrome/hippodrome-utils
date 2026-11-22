@@ -52,6 +52,21 @@ Every official language will also have a `{code}_localized.csv` for computer opp
 ### Stadium Zero
 Because Stadium zero was never translated into any language other than japanese, Plethron has a completely different translation architecture which is detailed [here](https://github.com/team-hippodrome/plethron/tree/main/translations).
 
+## Rendering
+Translated text is drawn with two shared fonts in `assets/font`, the same in every port, through `hippodrome/text_font.h`
+(moved from Plethron). The library builds each glyph in the style of the games' own font (white fill, a one-pixel dark
+outline from 16 pixels up) as an IA8 texture; the port loads the files, picks the face and caches the glyphs.
+
+| File | What it is | Licence |
+| --- | --- | --- |
+| `unifont_subset.hex` | GNU Unifont 16-pixel bitmaps of every character in every port's tables: the default face, and the fallback for any character Pop lacks | GPL 2+ with the font embedding exception, or OFL 1.1 (`LICENSE-unifont.txt`) |
+| `unifont_subset.otf` | The same characters as outlines, for text a port draws with Dear ImGui (its launcher) | as above |
+| `pop_subset.ttf` | Pop, the prototype rounded font: Latin drawn by Team Hippodrome, kana and kanji from M PLUS Rounded 1c, Hangul from Jua | OFL 1.1 (`LICENSE-pop.txt`) |
+
+The subsets cover the union of every port's tables, and only grow. After a port's tables gain characters, run
+`tools/font/make_unifont_subset.py --tables <every port's tables>` (and `tools/font/make_pop_font.py` with the base
+fonts it names, from google/fonts).
+
 ## Translation Guidelines
 ### Dialects
 If a translation must use a term or spelling that differs between regions, the following national dialects are considered the fallback in case of ambiguity.

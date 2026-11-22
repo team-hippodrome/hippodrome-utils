@@ -12,9 +12,15 @@ add_library(hippodrome_utils STATIC
     src/hue_choice.c
     src/move_description.c
     src/order_queue.c
+    src/text_font.c
 )
 add_library(hippodrome::utils ALIAS hippodrome_utils)
 target_include_directories(hippodrome_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if(NOT MSVC)
+    target_link_libraries(hippodrome_utils PRIVATE m) # text_font.c: lround, ceilf
+endif()
+# The text fonts (Unifont, Pop) and their licences, for the ports to pack next to their executables (text_font.h)
+set(HIPPODROME_UTILS_FONT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/assets/font CACHE INTERNAL "hippodrome-utils' text fonts")
 set_target_properties(hippodrome_utils PROPERTIES C_STANDARD 11 C_STANDARD_REQUIRED ON POSITION_INDEPENDENT_CODE ON)
 if(CMAKE_C_COMPILER_ID MATCHES "Clang|GNU")
     target_compile_options(hippodrome_utils PRIVATE -Wall -Wextra -Wno-unused-parameter)
@@ -29,10 +35,11 @@ endif()
 option(HIPPODROME_UTILS_TESTS "Build the hippodrome-utils unit tests" ${_hu_tests_default})
 if(HIPPODROME_UTILS_TESTS)
     enable_testing()
-    foreach(t stats speed_estimate trainer_memory summary_card window_anim hue_choice move_description order_queue)
+    foreach(t stats speed_estimate trainer_memory summary_card window_anim hue_choice move_description order_queue text_font)
         add_executable(test_${t} tests/test_${t}.c)
         target_link_libraries(test_${t} PRIVATE hippodrome_utils)
         set_target_properties(test_${t} PROPERTIES C_STANDARD 11)
+        target_compile_definitions(test_${t} PRIVATE HU_FONT_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets/font")
         add_test(NAME ${t} COMMAND test_${t} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     endforeach()
 endif()
