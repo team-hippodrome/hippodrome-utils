@@ -98,7 +98,7 @@ Upon the user first booting the port: if their system locale is different from t
 
 
 For official language:
-> You have uploaded a {ROM language} ROM but it has been detected your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available. To use the official {locale language} script, please dump a ROM from that region and upload it in the launcher.
+> You have uploaded a {ROM language} ROM but it has been detected that your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available. To use the official {locale language} script, please dump a ROM from that region and upload it in the launcher.
 > Would you like to use use AI-generated translation?
 > No, continue in {ROM language}
 > Yes, use AI-generated {locale language} translation. 
