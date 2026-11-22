@@ -97,17 +97,19 @@ BURGLAR_ARCANINE|e163a4b50e6e2f74c8ba807434ee2cf3|82402390 82403310 82404290 824
 Upon the user first booting the port: if their system locale is different from the language of their provided ROM AND their locale is a supported language, they should get the following prompts translated into both their locale and ROM language.
 
 
-For official language:
-> You have uploaded a {ROM language} ROM but it has been detected that your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available. To use the official {locale language} script, please dump a ROM from that region and upload it in the launcher.
-> Would you like to use use AI-generated translation?
+`{ROM language}` and `{locale language}` are the languages' names in the prompt's language. In English, "a"/"an" goes before the ROM's language name ("an English ROM", "a Japanese ROM").
+
+For official languages:
+> You have loaded a {ROM language} ROM, but your system language is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available. To use the official {locale language} script, please dump a ROM from that region and load it in the launcher.
+> Would you like to use the AI-generated translation?
 > No, continue in {ROM language}
-> Yes, use AI-generated {locale language} translation. 
+> Yes, use the AI-generated {locale language} translation
 
 For unofficial languages:
-> It has been detected your system locale is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available.
-> Would you like to use use AI-generated translation?
+> Your system language is set to {locale language}. An AI-generated {locale language} translation of this ROM's text is available.
+> Would you like to use the AI-generated translation?
 > No, continue in {ROM language}
-> Yes, use AI-generated {locale language} translation. 
+> Yes, use the AI-generated {locale language} translation
 
 Followed by
-> This can be changed any time in the options menu. We welcome corrections to translations on our GitHub or Discord. Have fun!
+> You can change this at any time in the options menu. We welcome corrections to the translations on our GitHub or Discord. Have fun!
