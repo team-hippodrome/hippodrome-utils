@@ -135,6 +135,8 @@ void hu_tm_record_team(hu_tm* tm, hu_tm_key key, const hu_tm_team_entry* team, i
         if (prev != NULL) {
             m->flags = prev->flags;
             m->speed = prev->speed;
+            m->speed_se_lo = prev->speed_se_lo;
+            m->speed_se_hi = prev->speed_se_hi;
             if (prev->level != 0 && prev->level != team[i].level) {
                 m->flags &= (uint8_t)~HU_TM_MON_HAS_SPEED;
             }
@@ -228,6 +230,53 @@ void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_rang
     }
 }
 
+void hu_tm_mon_speed_se(const hu_tm_mon* mon, uint16_t* se_lo, uint16_t* se_hi) {
+    if (mon != NULL && (mon->flags & HU_TM_MON_SPEED_SE)) {
+        *se_lo = mon->speed_se_lo;
+        *se_hi = mon->speed_se_hi;
+    } else {
+        *se_lo = 0;
+        *se_hi = HU_STAT_EXP_MAX;
+    }
+}
+
+hu_speed_range hu_tm_speed_under(const hu_tm_mon* mon, uint8_t base_speed, uint16_t se_lo, uint16_t se_hi) {
+    uint16_t lo, hi;
+    hu_tm_mon_speed_se(mon, &lo, &hi);
+    return hu_speed_rescale(mon->speed, base_speed, mon->level, lo, hi, se_lo, se_hi);
+}
+
+void hu_tm_record_speed_se(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range, uint8_t base_speed,
+                           uint16_t se_lo, uint16_t se_hi) {
+    hu_tm_trainer* t = get(tm, key);
+    hu_tm_mon* m = t ? get_mon(tm, t, species) : NULL;
+    hu_speed_range merged;
+    uint16_t old_lo, old_hi;
+    const bool vanilla = se_lo == 0 && se_hi == HU_STAT_EXP_MAX;
+    if (m == NULL) {
+        return;
+    }
+    hu_tm_mon_speed_se(m, &old_lo, &old_hi);
+    merged = (m->flags & HU_TM_MON_HAS_SPEED)
+                 ? hu_speed_intersect(hu_tm_speed_under(m, base_speed, se_lo, se_hi), range)
+                 : range;
+    if (!(m->flags & HU_TM_MON_HAS_SPEED) || merged.min != m->speed.min || merged.max != m->speed.max ||
+        old_lo != se_lo || old_hi != se_hi) {
+        m->speed = merged;
+        m->flags |= HU_TM_MON_HAS_SPEED;
+        if (vanilla) {
+            m->flags &= (uint8_t)~HU_TM_MON_SPEED_SE;
+            m->speed_se_lo = 0;
+            m->speed_se_hi = 0;
+        } else {
+            m->flags |= HU_TM_MON_SPEED_SE;
+            m->speed_se_lo = se_lo;
+            m->speed_se_hi = se_hi;
+        }
+        tm->dirty = true;
+    }
+}
+
 bool hu_tm_move_seen(const hu_tm_mon* mon, uint16_t move) {
     if (mon == NULL || move == 0) {
         return false;
@@ -254,13 +303,15 @@ bool hu_tm_dirty(const hu_tm* tm) {
  * end  u32 CRC-32 (zlib polynomial) of everything before it
  * Record: key (game, cup, division, round, trainer), flags, team_count, pad, then 6 mons of MON_SIZE bytes:
  *   species, level, seen, flags, moves u16[4], speed min u16, speed max u16,
- * then the name (HU_TM_NAME_BYTES). A reader takes records of the size the header gives, so later versions can add
+ * then the name (HU_TM_NAME_BYTES), then (added with Stat Exp clamping; older files' records end at the name) per mon
+ * u16 speed_se_lo, u16 speed_se_hi. A reader takes records of the size the header gives, so later versions can add
  * fields at the end of a record. */
 #define TM_MAGIC "HPTM"
 #define TM_VERSION 1
 #define HEADER_SIZE 12
 #define MON_SIZE (4 + 2 * HU_TM_MOVES + 4)
-#define RECORD_SIZE (8 + HU_TM_TEAM_MAX * MON_SIZE + HU_TM_NAME_BYTES)
+#define RECORD_SIZE_V1 (8 + HU_TM_TEAM_MAX * MON_SIZE + HU_TM_NAME_BYTES) /* before the stat exp clamps */
+#define RECORD_SIZE (RECORD_SIZE_V1 + HU_TM_TEAM_MAX * 4)
 
 size_t hu_tm_serialize(const hu_tm* tm, uint8_t** out) {
     size_t size = HEADER_SIZE + tm->count * RECORD_SIZE + 4;
@@ -301,6 +352,10 @@ size_t hu_tm_serialize(const hu_tm* tm, uint8_t** out) {
             hu_put16(q + 6 + 2 * HU_TM_MOVES, m->speed.max);
         }
         memcpy(p + 8 + HU_TM_TEAM_MAX * MON_SIZE, t->name, HU_TM_NAME_BYTES);
+        for (int j = 0; j < t->team_count && j < HU_TM_TEAM_MAX; j++) {
+            hu_put16(p + RECORD_SIZE_V1 + 4 * j, t->team[j].speed_se_lo);
+            hu_put16(p + RECORD_SIZE_V1 + 4 * j + 2, t->team[j].speed_se_hi);
+        }
         p += RECORD_SIZE;
     }
     hu_put32(p, hu_crc32(buf, size - 4));
@@ -318,7 +373,7 @@ hu_tm_io hu_tm_deserialize(hu_tm* tm, const uint8_t* data, size_t size) {
     }
     record_size = hu_get16(data + 6);
     count = hu_get32(data + 8);
-    if (record_size < RECORD_SIZE || (size - HEADER_SIZE - 4) / record_size < count ||
+    if (record_size < RECORD_SIZE_V1 || (size - HEADER_SIZE - 4) / record_size < count ||
         size != HEADER_SIZE + (size_t)count * record_size + 4 || hu_get32(data + size - 4) != hu_crc32(data, size - 4)) {
         return HU_TM_CORRUPT;
     }
@@ -344,6 +399,12 @@ hu_tm_io hu_tm_deserialize(hu_tm* tm, const uint8_t* data, size_t size) {
             }
             m->speed.min = hu_get16(q + 4 + 2 * HU_TM_MOVES);
             m->speed.max = hu_get16(q + 6 + 2 * HU_TM_MOVES);
+            if (record_size >= RECORD_SIZE) {
+                m->speed_se_lo = hu_get16(p + RECORD_SIZE_V1 + 4 * j);
+                m->speed_se_hi = hu_get16(p + RECORD_SIZE_V1 + 4 * j + 2);
+            } else {
+                m->flags &= (uint8_t)~HU_TM_MON_SPEED_SE; /* an older file: the game's own stat exp */
+            }
         }
         memcpy(t->name, p + 8 + HU_TM_TEAM_MAX * MON_SIZE, HU_TM_NAME_BYTES);
         t->name[HU_TM_NAME_BYTES - 1] = 0;

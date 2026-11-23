@@ -29,6 +29,18 @@ typedef struct hu_speed_range {
 /* The species' widest range at `level` under the base rules: 0 DVs and 0 stat experience to 15 DVs and 65535. */
 hu_speed_range hu_speed_initial(uint8_t base_speed, uint8_t level);
 
+/* The widest range when the game's stat exp is clamped into [se_lo, se_hi] (Stat Exp clamping,
+ * statexp_difficulty.h): 0 DVs with max(0, se_lo) to 15 DVs with min(65535, se_hi). hu_speed_initial is this with
+ * 0..65535. */
+hu_speed_range hu_speed_initial_se(uint8_t base_speed, uint8_t level, uint16_t se_lo, uint16_t se_hi);
+
+/* A range learned while the stat exp was clamped into [old_lo, old_hi], moved to a clamp of [new_lo, new_hi] with the
+ * Gen 1/2 formula (hu_gb_stat): every DV (0-15) and game stat exp value whose Speed under the old clamp lies in `r`
+ * is taken through the new clamp, and the result spans their Speeds. The DVs and the game's own stat exp never
+ * change, so this is exact, not a guess. An empty or contradictory `r` gives hu_speed_initial_se for the new clamp. */
+hu_speed_range hu_speed_rescale(hu_speed_range r, uint8_t base_speed, uint8_t level, uint16_t old_lo, uint16_t old_hi,
+                                uint16_t new_lo, uint16_t new_hi);
+
 /* An exact value (min == max), for a Pokémon whose stats the viewer knows. */
 hu_speed_range hu_speed_exact(uint16_t speed);
 

@@ -42,6 +42,8 @@ typedef struct hu_tm_key {
 enum hu_tm_mon_flags {
     HU_TM_MON_HAS_SPEED = 1 << 0, /* speed holds an estimate */
     HU_TM_MON_SENT_OUT = 1 << 1,  /* the player has seen it in battle */
+    HU_TM_MON_SPEED_SE = 1 << 2,  /* speed was learned with the stat exp clamped into speed_se_lo..hi (Stat Exp
+                                   * clamping); without it, the game's own stat exp (0..65535) */
 };
 
 typedef struct hu_tm_mon {
@@ -51,6 +53,8 @@ typedef struct hu_tm_mon {
     uint8_t flags; /* enum hu_tm_mon_flags */
     uint16_t moves[HU_TM_MOVES]; /* the moveset (0 = none / not known yet) */
     hu_speed_range speed;
+    uint16_t speed_se_lo; /* with HU_TM_MON_SPEED_SE: the opponent stat exp clamp `speed` was learned under */
+    uint16_t speed_se_hi;
 } hu_tm_mon;
 
 enum hu_tm_trainer_flags {
@@ -103,8 +107,21 @@ void hu_tm_record_reached(hu_tm* tm, hu_tm_key key);
  * known moveset takes a free slot (a game that shows no moveset learns it this way), or is dropped if all 4 are known. */
 void hu_tm_record_sent_out(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t level);
 void hu_tm_record_move(hu_tm* tm, hu_tm_key key, uint8_t species, uint16_t move);
-/* Merges a speed range learned in battle with the stored one (hu_speed_intersect). */
+/* Merges a speed range learned in battle with the stored one (hu_speed_intersect), for games without Stat Exp
+ * clamping (it ignores the stored clamp; see hu_tm_record_speed_se). */
 void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range);
+
+/* Stat Exp clamping (statexp_difficulty.h) changes the opponents' Speed, so an estimate is kept with the clamp
+ * [se_lo, se_hi] it was learned under (0..65535 = the game's own stat exp) and moved to another clamp with the stat
+ * formula (hu_speed_rescale) when the player changes the setting. `base_speed` is the species' base Speed.
+ * Merges `range` (learned under [se_lo, se_hi]) with the stored estimate taken to that clamp, and keeps that clamp. */
+void hu_tm_record_speed_se(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range, uint8_t base_speed,
+                           uint16_t se_lo, uint16_t se_hi);
+/* The clamp the stored estimate was learned under. */
+void hu_tm_mon_speed_se(const hu_tm_mon* mon, uint16_t* se_lo, uint16_t* se_hi);
+/* The stored estimate as it stands under the clamp [se_lo, se_hi] (the stored one unchanged if that is its own). The
+ * store is not changed: switching the setting back and forth loses nothing. */
+hu_speed_range hu_tm_speed_under(const hu_tm_mon* mon, uint8_t base_speed, uint16_t se_lo, uint16_t se_hi);
 
 bool hu_tm_move_seen(const hu_tm_mon* mon, uint16_t move);
 

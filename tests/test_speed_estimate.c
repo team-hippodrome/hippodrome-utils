@@ -72,5 +72,39 @@ int main(void) {
     CHECK_EQ(i.max, 140);
     i = hu_speed_intersect(a, c);
     CHECK_EQ(i.min, 150);
+        /* Stat Exp clamping. Beedrill (base 75) L12: the game's own stat exp gives hu_speed_initial. */
+    hu_speed_range v = hu_speed_initial(75, 12);
+    hu_speed_range s = hu_speed_initial_se(75, 12, 0, 65535);
+    CHECK_EQ(s.min, v.min);
+    CHECK_EQ(s.max, v.max);
+    /* Stat exp fixed at 65535: only the DV is left, 30..34. */
+    s = hu_speed_initial_se(75, 12, 65535, 65535);
+    CHECK_EQ(s.min, 30);
+    CHECK_EQ(s.max, 34);
+    /* Seen at exactly 26 with the game's own stat exp: every DV fits, so under 65535..65535 it is 30..34 again. */
+    hu_speed_range x = { 26, 26 };
+    s = hu_speed_rescale(x, 75, 12, 0, 65535, 65535, 65535);
+    CHECK_EQ(s.min, 30);
+    CHECK_EQ(s.max, 34);
+    /* Exactly 31 under 65535..65535 pins the DV to 2..5; back with the game's own stat exp that is 23..31. */
+    x.min = x.max = 31;
+    s = hu_speed_rescale(x, 75, 12, 65535, 65535, 0, 65535);
+    CHECK_EQ(s.min, 23);
+    CHECK_EQ(s.max, 31);
+    /* Same clamp: unchanged. */
+    s = hu_speed_rescale(x, 75, 12, 100, 200, 100, 200);
+    CHECK_EQ(s.min, 31);
+    CHECK_EQ(s.max, 31);
+    /* A range keeps no DVs, so there and back loses what the clamp pinned (23..31 fits every DV): that is why
+     * trainer memory keeps the stored estimate and only rescales it to show it. */
+    s = hu_speed_rescale(hu_speed_rescale(x, 75, 12, 65535, 65535, 0, 65535), 75, 12, 0, 65535, 65535, 65535);
+    CHECK_EQ(s.min, 30);
+    CHECK_EQ(s.max, 34);
+    /* A range no stat could have (corrupt file) falls back to the plain initial range under the new clamp. */
+    x.min = x.max = 200;
+    s = hu_speed_rescale(x, 75, 12, 0, 65535, 65535, 65535);
+    CHECK_EQ(s.min, 30);
+    CHECK_EQ(s.max, 34);
+
     TEST_DONE();
 }

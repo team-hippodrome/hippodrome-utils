@@ -5,97 +5,92 @@
 
 int main(void) {
     hu_se_setting s = hu_se_vanilla();
-    uint16_t lo = 1, hi = 1;
+    uint16_t lo, hi;
 
     /* vanilla changes nothing */
-    CHECK_EQ(s.mode, HU_SE_VANILLA);
     CHECK(!hu_se_active(&s));
-    CHECK(!hu_se_range(&s, HU_SE_OPPONENT, &lo, &hi));
+    hu_se_bounds(&s, HU_SE_OPPONENT, &lo, &hi);
+    CHECK_EQ(lo, 0);
+    CHECK_EQ(hi, 65535);
     {
         uint16_t se[5] = { 1, 1, 6889, 25600, 65535 };
         hu_se_apply(&s, HU_SE_OPPONENT, se);
         CHECK_EQ(se[0], 1);
-        CHECK_EQ(se[2], 6889);
         CHECK_EQ(se[4], 65535);
     }
 
-    /* the presets: fifths of 65535 */
-    static const uint16_t kEnds[6] = { 0, 13107, 26214, 39321, 52428, 65535 };
-    for (int m = HU_SE_CASUAL; m <= HU_SE_KAIZO; m++) {
-        s.mode = (uint8_t)m;
-        CHECK(hu_se_range(&s, HU_SE_OPPONENT, &lo, &hi));
-        CHECK_EQ(lo, kEnds[m - HU_SE_CASUAL]);
-        CHECK_EQ(hi, kEnds[m - HU_SE_CASUAL + 1]);
-        CHECK_EQ(hu_se_errors(&s), 0);
+    /* the preset tables: the quadratic curve, reversed for rentals */
+    static const uint16_t kOpp[5] = { 0, 4096, 16384, 36863, 65535 };
+    for (int p = HU_SE_CASUAL; p <= HU_SE_KAIZO; p++) {
+        CHECK_EQ(hu_se_preset_value(p, HU_SE_OPPONENT), kOpp[p - HU_SE_CASUAL]);
+        CHECK_EQ(hu_se_preset_value(p, HU_SE_RENTAL), kOpp[4 - (p - HU_SE_CASUAL)]);
     }
-    /* rentals: the same labels the other way round (Casual = strongest, Kaizo = weakest) */
-    for (int m = HU_SE_CASUAL; m <= HU_SE_KAIZO; m++) {
-        s.mode = (uint8_t)m;
-        CHECK(hu_se_range(&s, HU_SE_RENTAL, &lo, &hi));
-        CHECK_EQ(lo, kEnds[4 - (m - HU_SE_CASUAL)]);
-        CHECK_EQ(hi, kEnds[5 - (m - HU_SE_CASUAL)]);
-    }
-    s.mode = HU_SE_KAIZO;
+    CHECK_EQ(hu_se_preset_value(HU_SE_VANILLA, HU_SE_OPPONENT), 0);
+    CHECK(strcmp(hu_se_preset_name(HU_SE_KAIZO), "Kaizo") == 0);
+    CHECK(strcmp(hu_se_preset_name(99), "") == 0);
+
+    /* only a minimum: Poké Ball Cup round 1 COM with Opponent Minimum = Medium (16384) */
+    s.min.preset = HU_SE_MEDIUM;
+    CHECK(hu_se_active(&s));
     {
-        uint16_t se[5] = { 65535, 25600, 13107, 1, 0 };
+        uint16_t se[5] = { 25600, 6889, 65535, 6889, 6889 };
+        hu_se_apply(&s, HU_SE_OPPONENT, se);
+        CHECK_EQ(se[0], 25600);
+        CHECK_EQ(se[1], 16384);
+        CHECK_EQ(se[2], 65535); /* no maximum: kept */
+        CHECK_EQ(se[3], 16384);
+    }
+    /* only a maximum: Rental Maximum = Kaizo (0) strips a rental's stat exp */
+    s = hu_se_vanilla();
+    s.max.preset = HU_SE_KAIZO;
+    {
+        uint16_t se[5] = { 1, 1, 13107, 1, 65535 };
         hu_se_apply(&s, HU_SE_RENTAL, se);
-        CHECK_EQ(se[0], 13107);
-        CHECK_EQ(se[1], 13107);
-        CHECK_EQ(se[2], 13107);
-        CHECK_EQ(se[3], 1);
-        CHECK_EQ(se[4], 0);
-    }
-    /* custom bounds are the same for both sides */
-    s.mode = HU_SE_CUSTOM;
-    s.custom_min = 100;
-    s.custom_max = 200;
-    CHECK(hu_se_range(&s, HU_SE_RENTAL, &lo, &hi));
-    CHECK_EQ(lo, 100);
-    CHECK_EQ(hi, 200);
-    CHECK(strcmp(hu_se_mode_name(HU_SE_KAIZO), "Kaizo") == 0);
-    CHECK(strcmp(hu_se_mode_name(HU_SE_EASY), "Easy") == 0);
-    CHECK(strcmp(hu_se_mode_name(99), "") == 0);
-
-    /* Medium on the Poké Ball Cup round 1 COM (25600 HP, 6889 elsewhere, one 65535) */
-    s.mode = HU_SE_MEDIUM;
-    {
-        uint16_t se[5] = { 25600, 6889, 65535, 6889, 30000 };
-        hu_se_apply(&s, HU_SE_OPPONENT, se);
-        CHECK_EQ(se[0], 26214);
-        CHECK_EQ(se[1], 26214);
-        CHECK_EQ(se[2], 39321);
-        CHECK_EQ(se[3], 26214);
-        CHECK_EQ(se[4], 30000); /* inside: kept */
-    }
-    /* Kaizo maxes a rental's stat exp of 1 */
-    s.mode = HU_SE_KAIZO;
-    {
-        uint16_t se[5] = { 1, 1, 1, 1, 1 };
-        hu_se_apply(&s, HU_SE_OPPONENT, se);
-        for (int i = 0; i < 5; i++) CHECK_EQ(se[i], 52428);
+        for (int i = 0; i < 5; i++) CHECK_EQ(se[i], 0);
     }
 
-    /* custom: own bounds, min == max forces a value, max below min is an error and acts as vanilla */
-    s.mode = HU_SE_CUSTOM;
-    s.custom_min = s.custom_max = 65535;
-    {
-        uint16_t se[5] = { 1, 6889, 25600, 1, 65535 };
-        hu_se_apply(&s, HU_SE_OPPONENT, se);
-        for (int i = 0; i < 5; i++) CHECK_EQ(se[i], 65535);
-    }
-    s.custom_min = 2;
-    s.custom_max = 1;
-    CHECK_EQ(hu_se_errors(&s), HU_SE_ORDER);
-    CHECK(!hu_se_active(&s));
-    {
-        uint16_t se[5] = { 0, 0, 0, 0, 0 };
-        hu_se_apply(&s, HU_SE_OPPONENT, se);
-        CHECK_EQ(se[0], 0);
-    }
-    CHECK(hu_se_error_text(HU_SE_ORDER)[0] != '\0');
-    CHECK(hu_se_error_text(0)[0] == '\0');
-    /* an unknown mode is vanilla */
-    s.mode = 42;
-    CHECK(!hu_se_active(&s));
+    /* custom values */
+    s = hu_se_vanilla();
+    s.min.preset = HU_SE_CUSTOM;
+    s.min.custom = 1000;
+    s.max.preset = HU_SE_CUSTOM;
+    s.max.custom = 2000;
+    hu_se_bounds(&s, HU_SE_RENTAL, &lo, &hi);
+    CHECK_EQ(lo, 1000);
+    CHECK_EQ(hi, 2000);
+
+    /* validation: a raised minimum bumps the maximum, a lowered maximum pulls the minimum */
+    s = hu_se_vanilla();
+    s.min.preset = HU_SE_HARD;  /* opponent 36863 */
+    s.max.preset = HU_SE_EASY;  /* opponent 4096 */
+    CHECK(hu_se_bound_changed(&s, HU_SE_OPPONENT, true));
+    CHECK_EQ(s.max.preset, HU_SE_HARD);
+    s.min.preset = HU_SE_KAIZO;
+    s.max.preset = HU_SE_CASUAL;
+    CHECK(hu_se_bound_changed(&s, HU_SE_OPPONENT, false));
+    CHECK_EQ(s.min.preset, HU_SE_CASUAL);
+    /* rentals: Casual (65535) as the minimum above a Kaizo (0) maximum */
+    s.min.preset = HU_SE_CASUAL;
+    s.max.preset = HU_SE_KAIZO;
+    CHECK(hu_se_bound_changed(&s, HU_SE_RENTAL, true));
+    CHECK_EQ(s.max.preset, HU_SE_CASUAL);
+    /* custom against a preset */
+    s.min.preset = HU_SE_CUSTOM;
+    s.min.custom = 50000;
+    s.max.preset = HU_SE_HARD; /* opponent 36863 */
+    CHECK(hu_se_bound_changed(&s, HU_SE_OPPONENT, true));
+    CHECK_EQ(s.max.preset, HU_SE_CUSTOM);
+    CHECK_EQ(s.max.custom, 50000);
+    /* nothing to do: in order, or one bound Vanilla */
+    s.min.preset = HU_SE_EASY;
+    s.max.preset = HU_SE_HARD;
+    CHECK(!hu_se_bound_changed(&s, HU_SE_OPPONENT, true));
+    s.max.preset = HU_SE_VANILLA;
+    s.min.preset = HU_SE_KAIZO;
+    CHECK(!hu_se_bound_changed(&s, HU_SE_OPPONENT, true));
+
+    CHECK_EQ(hu_se_clamp(5, 10, 20), 10);
+    CHECK_EQ(hu_se_clamp(25, 10, 20), 20);
+    CHECK_EQ(hu_se_clamp(15, 10, 20), 15);
     TEST_DONE();
 }
