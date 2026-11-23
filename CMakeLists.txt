@@ -13,6 +13,7 @@ add_library(hippodrome_utils STATIC
     src/move_description.c
     src/order_queue.c
     src/text_font.c
+    src/statexp_difficulty.c
 )
 add_library(hippodrome::utils ALIAS hippodrome_utils)
 target_include_directories(hippodrome_utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -35,7 +36,7 @@ endif()
 option(HIPPODROME_UTILS_TESTS "Build the hippodrome-utils unit tests" ${_hu_tests_default})
 if(HIPPODROME_UTILS_TESTS)
     enable_testing()
-    foreach(t stats speed_estimate trainer_memory summary_card window_anim hue_choice move_description order_queue text_font)
+    foreach(t stats speed_estimate trainer_memory summary_card window_anim hue_choice move_description order_queue text_font statexp_difficulty)
         add_executable(test_${t} tests/test_${t}.c)
         target_link_libraries(test_${t} PRIVATE hippodrome_utils)
         set_target_properties(test_${t} PROPERTIES C_STANDARD 11)
