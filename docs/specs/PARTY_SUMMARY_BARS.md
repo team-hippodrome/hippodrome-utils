@@ -65,4 +65,4 @@ see ./SPEED_STAT_ESTIMATE.md
 The summary bars should appear in 16:9 mode only when the user has an ultrawide display (or really, when there is room). Otherwise, 16:9 mode and summary bars are not compatible.
 
 # When they are shown
-The summary bars are shown only during a battle. They are not shown during the intro's demo battles, nor on the victory parade ("Winner") screen after a battle.
+The summary bars are shown only during a battle or the battle order selection screen (where pokemon are picked from the party for battle). They are not shown during the intro's demo battles, nor on the victory parade ("Winner") screen after a battle.
