@@ -16,6 +16,10 @@ every glyph the game font's white fill, one-pixel dark outline and two-cycle sha
     python3 tools/font/make_pop_font.py --mplus MPLUSRounded1c-ExtraBold.ttf --jua Jua-Regular.ttf \
         --tables <every port's translation tables> --extra <strings a port draws itself>
     python3 tools/font/make_pop_font.py --preview out.png      # also renders a specimen of the Latin design
+    python3 tools/font/make_pop_font.py --retag old.ttf --out new.ttf   # fix the names of a file built before 2026-11-23
+
+The output is a standard installable TrueType font (full name, PostScript name, fsType 0), so type designers can open
+and install it on Windows and macOS. The full build is named "Plethron Pop Full" so both can be installed at once.
 
 Both base fonts come from https://github.com/google/fonts (ofl/mplusrounded1c, ofl/jua).
 
@@ -649,23 +653,71 @@ def build(args):
     fb.setupGlyf(glyphs)
     fb.setupHorizontalMetrics(metrics)
     fb.setupHorizontalHeader(ascent=ASCENT, descent=-DESCENT)
-    fb.setupNameTable({
-        "familyName": "Plethron Pop",
-        "styleName": "Regular",
-        "copyright": "Latin: Copyright 2026 Team Hippodrome. Kana and kanji from M PLUS Rounded 1c, Copyright 2016 The "
-                     "Rounded M+ Project Authors. Hangul from Jua, Copyright 2018 The Jua Project Authors."
-                     + (" Further kanji from Zen Maru Gothic, Copyright 2021 The Zen Maru Gothic Project Authors. "
-                        "Further Hangul from Nanum Gothic, Copyright 2010 NHN Corporation." if args.full else ""),
-        "licenseDescription": "This Font Software is licensed under the SIL Open Font License, Version 1.1.",
-        "licenseInfoURL": "https://openfontlicense.org",
-    })
-    fb.setupOS2(sTypoAscender=ASCENT, sTypoDescender=-DESCENT, usWinAscent=ASCENT, usWinDescent=DESCENT)
+    fb.setupNameTable(name_strings(args.full))
+    fb.setupOS2(**OS2_FIELDS)
     fb.setupPost(isFixedPitch=0)
+    finish_os2(fb.font)
     fb.save(args.out)
     print(f"{args.out}: {len(cmap)} characters, {os.path.getsize(args.out) // 1024} KB")
     if missing:
         print("not covered (Unifont fallback):", "".join(missing))
     return chars
+
+
+VERSION = "Version 1.000"
+# OS/2: fsType 0 = installable embedding (the OFL puts no restriction on it; FontBuilder's default 4 would mark the
+# font "preview & print" only)
+OS2_FIELDS = dict(sTypoAscender=ASCENT, sTypoDescender=-DESCENT, sTypoLineGap=0, usWinAscent=ASCENT,
+                  usWinDescent=DESCENT, fsType=0, usWeightClass=400, achVendID="NONE")
+
+
+def name_strings(full):
+    """Name table. Windows refuses a TrueType file without a full font name (ID 4) as "not a valid font file", and
+    installers want the unique ID (3), version (5) and PostScript name (6) too, so all of them are written. The game
+    only reads cmap/glyf/loca/hmtx/hhea/head (stb_truetype), so none of this changes how the port draws text."""
+    copyright = ("Latin: Copyright 2026 Team Hippodrome. Kana and kanji from M PLUS Rounded 1c, Copyright 2016 The "
+                 "Rounded M+ Project Authors. Hangul from Jua, Copyright 2018 The Jua Project Authors."
+                 + (" Further kanji from Zen Maru Gothic, Copyright 2021 The Zen Maru Gothic Project Authors. "
+                    "Further Hangul from Nanum Gothic, Copyright 2010 NHN Corporation." if full else ""))
+    # the full and the subset build get different names so both can be installed side by side
+    family = "Plethron Pop Full" if full else "Plethron Pop"
+    ps = family.replace(" ", "") + "-Regular"
+    return {
+        "copyright": copyright,
+        "familyName": family,
+        "styleName": "Regular",
+        "uniqueFontIdentifier": f"1.000;NONE;{ps}",
+        "fullName": f"{family} Regular",
+        "version": VERSION,
+        "psName": ps,
+        "licenseDescription": "This Font Software is licensed under the SIL Open Font License, Version 1.1.",
+        "licenseInfoURL": "https://openfontlicense.org",
+    }
+
+
+def finish_os2(font):
+    """Fill the OS/2 fields FontBuilder leaves at 0 (average width, Unicode and code page ranges) from the glyphs."""
+    os2 = font["OS/2"]
+    os2.recalcAvgCharWidth(font)
+    os2.recalcUnicodeRanges(font)
+    os2.recalcCodePageRanges(font)
+    font["head"].fontRevision = 1.0
+
+
+def retag(path, out):
+    """Rewrite only the name and OS/2 tables of an already built Pop font (and head's revision and checksum), so a file built before
+    the naming fix becomes installable without rebuilding it from the base fonts. Every glyph table stays byte-identical."""
+    font = TTFont(path, recalcTimestamp=False)  # same input, same output
+    full = "Zen Maru Gothic" in (font["name"].getDebugName(0) or "")
+    fb = FontBuilder(font=font)
+    font["name"].names = []
+    fb.setupNameTable(name_strings(full))
+    os2 = font["OS/2"]
+    for k, v in OS2_FIELDS.items():
+        setattr(os2, k, v)
+    finish_os2(font)
+    font.save(out)
+    print(f"{out}: renamed {'Plethron Pop Full' if full else 'Plethron Pop'}")
 
 
 def preview(path, out, text=None):
@@ -684,8 +736,8 @@ def preview(path, out, text=None):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--mplus", required=True, help="MPLUSRounded1c-ExtraBold.ttf")
-    ap.add_argument("--jua", required=True, help="Jua-Regular.ttf")
+    ap.add_argument("--mplus", help="MPLUSRounded1c-ExtraBold.ttf")
+    ap.add_argument("--jua", help="Jua-Regular.ttf")
     ap.add_argument("--out", default=OUT)
     add_table_args(ap)
     ap.add_argument("--full", action="store_true",
@@ -694,7 +746,14 @@ def main():
     ap.add_argument("--zen", help="ZenMaruGothic-Black.ttf (with --full)")
     ap.add_argument("--nanum", help="NanumGothic-ExtraBold.ttf (with --full)")
     ap.add_argument("--preview", help="also write a specimen PNG of the result")
+    ap.add_argument("--retag", metavar="TTF", help="only rewrite the name and OS/2 tables of an existing Pop font "
+                                                    "(writes --out, or the file itself if --out is not given)")
     args = ap.parse_args()
+    if args.retag:
+        retag(args.retag, args.out if args.out != OUT else args.retag)
+        return
+    if not args.mplus or not args.jua:
+        ap.error("--mplus and --jua are required")
     build(args)
     if args.preview:
         preview(args.out, args.preview)
