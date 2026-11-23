@@ -41,7 +41,7 @@ The model never copies the battle's reactions, such as being hit: it only ever s
 The model should update upon using transform. The model should NOT update upon having an active substitute.
 The model is on the left side of the card for the left side trainer and the right side of the card for the right side trainer
 
-Large pokemon such as onix should have their card's model's scale changes so that the face(s) of hte pokemon displays prominently when not fainted.
+Large pokemon such as Onix should have their card's model's scale changes so that the face(s) of hte pokemon displays prominently when not fainted.
 
 ## HP Bar
 The HP bar is the first UI element shown on the right, the moves under it and the speed stat estimate under moves
