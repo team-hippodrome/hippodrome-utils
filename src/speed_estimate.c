@@ -7,6 +7,61 @@ hu_speed_range hu_speed_initial(uint8_t base_speed, uint8_t level) {
     return r;
 }
 
+static uint16_t clamp_se(uint32_t e, uint16_t lo, uint16_t hi) {
+    if (lo > hi) {
+        uint16_t t = lo;
+        lo = hi;
+        hi = t;
+    }
+    return (uint16_t)(e < lo ? lo : e > hi ? hi : e);
+}
+
+hu_speed_range hu_speed_initial_se(uint8_t base_speed, uint8_t level, uint16_t se_min, uint16_t se_max) {
+    hu_speed_range r;
+    r.min = hu_gb_stat(base_speed, 0, clamp_se(0, se_min, se_max), level);
+    r.max = hu_gb_stat(base_speed, HU_DV_MAX, clamp_se(HU_STAT_EXP_MAX, se_min, se_max), level);
+    return r;
+}
+
+/* The stat is non-decreasing in the (unclamped) stat experience, so each DV's allowed stat experience is one interval,
+ * found by binary search. */
+hu_speed_range hu_speed_rescale(hu_speed_range r, uint8_t base_speed, uint8_t level, uint16_t from_min,
+                                uint16_t from_max, uint16_t to_min, uint16_t to_max) {
+    hu_speed_range out = { 0xFFFF, 0 };
+    for (unsigned dv = 0; dv <= HU_DV_MAX; dv++) {
+        uint32_t lo = 0, hi = HU_STAT_EXP_MAX + 1u, e_min, e_max;
+        /* the smallest e whose stat reaches r.min */
+        while (lo < hi) {
+            uint32_t mid = (lo + hi) / 2;
+            if (hu_gb_stat(base_speed, (uint8_t)dv, clamp_se(mid, from_min, from_max), level) >= r.min) hi = mid;
+            else lo = mid + 1;
+        }
+        e_min = lo;
+        /* the largest e whose stat stays at most r.max */
+        lo = 0;
+        hi = HU_STAT_EXP_MAX + 1u;
+        while (lo < hi) {
+            uint32_t mid = (lo + hi) / 2;
+            if (hu_gb_stat(base_speed, (uint8_t)dv, clamp_se(mid, from_min, from_max), level) > r.max) hi = mid;
+            else lo = mid + 1;
+        }
+        if (lo == 0 || e_min > HU_STAT_EXP_MAX || e_min > lo - 1) {
+            continue; /* no stat experience fits this DV */
+        }
+        e_max = lo - 1;
+        {
+            uint16_t a = hu_gb_stat(base_speed, (uint8_t)dv, clamp_se(e_min, to_min, to_max), level);
+            uint16_t b = hu_gb_stat(base_speed, (uint8_t)dv, clamp_se(e_max, to_min, to_max), level);
+            if (a < out.min) out.min = a;
+            if (b > out.max) out.max = b;
+        }
+    }
+    if (out.min > out.max) {
+        return hu_speed_initial_se(base_speed, level, to_min, to_max);
+    }
+    return out;
+}
+
 hu_speed_range hu_speed_exact(uint16_t speed) {
     hu_speed_range r = { speed, speed };
     return r;

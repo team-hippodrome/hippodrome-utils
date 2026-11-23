@@ -51,6 +51,9 @@ typedef struct hu_tm_mon {
     uint8_t flags; /* enum hu_tm_mon_flags */
     uint16_t moves[HU_TM_MOVES]; /* the moveset (0 = none / not known yet) */
     hu_speed_range speed;
+    /* The stat experience range the opponents' Pokémon were held in when `speed` was learned (Stat Exp difficulty;
+     * 0 and 65535 under the base rules). SPEED_STAT_ESTIMATE: the estimate is adjusted when that setting changes. */
+    uint16_t se_min, se_max;
 } hu_tm_mon;
 
 enum hu_tm_trainer_flags {
@@ -103,8 +106,16 @@ void hu_tm_record_reached(hu_tm* tm, hu_tm_key key);
  * known moveset takes a free slot (a game that shows no moveset learns it this way), or is dropped if all 4 are known. */
 void hu_tm_record_sent_out(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t level);
 void hu_tm_record_move(hu_tm* tm, hu_tm_key key, uint8_t species, uint16_t move);
-/* Merges a speed range learned in battle with the stored one (hu_speed_intersect). */
+/* Merges a speed range learned in battle with the stored one (hu_speed_intersect), under the base rules' stat
+ * experience (0 to 65535). */
 void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range);
+/* The same, learned while the opponents' stat experience was held in [se_min, se_max] (Stat Exp difficulty). A stored
+ * estimate from another range is first adjusted to this one (hu_speed_rescale), which needs the species' base Speed. */
+void hu_tm_record_speed_se(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t base_speed, hu_speed_range range,
+                           uint16_t se_min, uint16_t se_max);
+/* The stored speed estimate as it is with the opponents' stat experience held in [se_min, se_max]: adjusted from the
+ * range it was learned under. Returns false (and leaves *out) when there is no estimate. */
+bool hu_tm_mon_speed(const hu_tm_mon* mon, uint8_t base_speed, uint16_t se_min, uint16_t se_max, hu_speed_range* out);
 
 bool hu_tm_move_seen(const hu_tm_mon* mon, uint16_t move);
 
