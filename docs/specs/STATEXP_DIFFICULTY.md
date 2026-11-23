@@ -5,4 +5,4 @@ This feature lets players set the minimum and maximum Stat Exp rental and oppone
 
 This setting goes in the launcher.
 
-By default, the values should be set to "vanilla" to use vanilla settings. Settings labeled Casual, East, Medium, Hard, and Kaizo should be set at every 1/5th of 65535 (max stat exp value).
+By default, the values should be set to "vanilla" to use vanilla settings. Settings labeled Casual, Easy, Medium, Hard, and Kaizo should be set at every 1/5th of 65535 (max stat exp value) for maximum. These labels are flipped for the minimum
