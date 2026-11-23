@@ -16,8 +16,8 @@ The games only give each species hues from its own range: the species table has 
 (Stadium Zero: D_80064C5C +0x10/+0x12, the same layout as Stadium 1's and Stadium 2's tables; for example Charizard
 -20..15, Vaporeon -20..50), and a nickname picks a point in it. Hues outside it can look unnatural, so the setting has
 three choices (bike, 2026-11-22):
-- Off: the game's own hues, no picker (the default, as every enhancement).
-- Restricted: the picker only offers hues in the species' range: 0, the 15° steps inside it and its two ends
+- Off: the game's own hues, no picker (the default for Zero).
+- Restricted: the picker only offers hues in the species' range: 0, the 15° steps inside it and its two ends (the default for 1 and 2)
   (hu_hue_step_in_range). A choice stored while unrestricted that lies outside the range is drawn at the nearer end
   (hu_hue_clamp) but kept, so switching back shows it again.
 - Unrestricted: the whole color wheel in 15° steps (hu_hue_step).
