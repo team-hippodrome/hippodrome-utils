@@ -97,5 +97,81 @@ int main(void) {
     /* an unknown mode is vanilla */
     s.mode = 42;
     CHECK(!hu_se_active(&s));
+    /* ---- four bounds (the reworked spec) ---- */
+    {
+        hu_se_bounds b = hu_se_bounds_vanilla();
+        uint16_t v = 7;
+        static const uint16_t kCurve[5] = { 0, 4096, 16384, 36863, 65535 };
+        CHECK(!hu_se_bounds_active(&b));
+        CHECK(!hu_se_bound_value(&b.min, HU_SE_OPPONENT, &v));
+        CHECK_EQ(v, 7);
+        for (int m = HU_SE_CASUAL; m <= HU_SE_KAIZO; m++) {
+            CHECK_EQ(hu_se_preset_value(m, HU_SE_OPPONENT), kCurve[m - HU_SE_CASUAL]);
+            CHECK_EQ(hu_se_preset_value(m, HU_SE_RENTAL), kCurve[4 - (m - HU_SE_CASUAL)]);
+        }
+        CHECK_EQ(hu_se_preset_value(HU_SE_VANILLA, HU_SE_OPPONENT), 0);
+        CHECK_EQ(hu_se_preset_value(HU_SE_CUSTOM, HU_SE_OPPONENT), 0);
+
+        /* only a Minimum: a floor, no ceiling */
+        b.min.mode = HU_SE_MEDIUM;
+        CHECK(hu_se_bounds_active(&b));
+        {
+            uint16_t se[5] = { 0, 16383, 16384, 40000, 65535 };
+            hu_se_bounds_apply(&b, HU_SE_OPPONENT, se);
+            CHECK_EQ(se[0], 16384);
+            CHECK_EQ(se[1], 16384);
+            CHECK_EQ(se[2], 16384);
+            CHECK_EQ(se[3], 40000);
+            CHECK_EQ(se[4], 65535);
+        }
+        /* only a Maximum, custom */
+        b = hu_se_bounds_vanilla();
+        b.max.mode = HU_SE_CUSTOM;
+        b.max.custom = 1000;
+        {
+            uint16_t se[5] = { 0, 999, 1000, 1001, 65535 };
+            hu_se_bounds_apply(&b, HU_SE_RENTAL, se);
+            CHECK_EQ(se[0], 0);
+            CHECK_EQ(se[1], 999);
+            CHECK_EQ(se[3], 1000);
+            CHECK_EQ(se[4], 1000);
+        }
+        /* rentals Kaizo..Kaizo: everything 0 */
+        b.min.mode = b.max.mode = HU_SE_KAIZO;
+        {
+            uint16_t se[5] = { 5, 6, 7, 8, 65535 };
+            hu_se_bounds_apply(&b, HU_SE_RENTAL, se);
+            for (int i = 0; i < 5; i++) CHECK_EQ(se[i], 0);
+        }
+
+        /* the fix: a Minimum raised above the Maximum takes the Maximum with it */
+        b = hu_se_bounds_vanilla();
+        b.min.mode = HU_SE_HARD;  /* opponents: 36863 */
+        b.max.mode = HU_SE_EASY;  /* 4096 */
+        CHECK(hu_se_bounds_fix(&b, HU_SE_OPPONENT, true));
+        CHECK_EQ(b.max.mode, HU_SE_HARD);
+        /* a Maximum lowered below the Minimum takes the Minimum with it */
+        b.min.mode = HU_SE_CUSTOM;
+        b.min.custom = 30000;
+        b.max.mode = HU_SE_CUSTOM;
+        b.max.custom = 2000;
+        CHECK(hu_se_bounds_fix(&b, HU_SE_OPPONENT, false));
+        CHECK_EQ(b.min.mode, HU_SE_CUSTOM);
+        CHECK_EQ(b.min.custom, 2000);
+        /* nothing to fix: in order, or one of them Vanilla */
+        CHECK(!hu_se_bounds_fix(&b, HU_SE_OPPONENT, true));
+        b.max.mode = HU_SE_VANILLA;
+        b.min.custom = 65535;
+        CHECK(!hu_se_bounds_fix(&b, HU_SE_OPPONENT, true));
+        /* the same labels mean other values for rentals: Casual min (65535) over Kaizo max (0) */
+        b.min.mode = HU_SE_CASUAL;
+        b.max.mode = HU_SE_KAIZO;
+        CHECK(hu_se_bounds_fix(&b, HU_SE_RENTAL, true));
+        CHECK_EQ(b.max.mode, HU_SE_CASUAL);
+        b.min.mode = HU_SE_KAIZO;
+        b.max.mode = HU_SE_CASUAL;
+        CHECK(!hu_se_bounds_fix(&b, HU_SE_RENTAL, false)); /* 0 <= 65535 for rentals */
+    }
+
     TEST_DONE();
 }
