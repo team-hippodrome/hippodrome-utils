@@ -72,5 +72,34 @@ int main(void) {
     CHECK_EQ(i.max, 140);
     i = hu_speed_intersect(a, c);
     CHECK_EQ(i.min, 150);
+    /* Stat Exp difficulty: the widest range with stat experience held in a range. */
+    {
+        hu_speed_range full = hu_speed_initial(90, 50);
+        hu_speed_range same = hu_speed_initial_se(90, 50, 0, 65535);
+        CHECK_EQ(same.min, full.min);
+        CHECK_EQ(same.max, full.max);
+        hu_speed_range kaizo = hu_speed_initial_se(90, 50, 65535, 65535);
+        CHECK_EQ(kaizo.min, hu_gb_stat(90, 0, 65535, 50));
+        CHECK_EQ(kaizo.max, full.max);
+        /* Rescaling to the same range changes nothing; from the base rules to a fixed 65535 keeps the DV spread. */
+        hu_speed_range k = { 120, 130 };
+        hu_speed_range back = hu_speed_rescale(k, 90, 50, 0, 65535, 0, 65535);
+        CHECK_EQ(back.min, 120);
+        CHECK_EQ(back.max, 130);
+        hu_speed_range up = hu_speed_rescale(k, 90, 50, 0, 65535, 65535, 65535);
+        CHECK(up.min >= kaizo.min && up.max <= kaizo.max);
+        CHECK_EQ(up.max, full.max); /* 130 allows DV 15 at little stat exp: at 65535 that is the top */
+        /* An exact speed learned at a fixed 0 stat exp is one DV: at a fixed 65535 it is exact again. */
+        hu_speed_range exact = { hu_gb_stat(90, 7, 0, 50), hu_gb_stat(90, 7, 0, 50) };
+        hu_speed_range moved = hu_speed_rescale(exact, 90, 50, 0, 0, 65535, 65535);
+        CHECK(moved.min == moved.max || moved.max - moved.min <= 1); /* (neighbouring DVs can share a stat) */
+        CHECK(moved.min >= hu_gb_stat(90, 6, 65535, 50) && moved.max <= hu_gb_stat(90, 8, 65535, 50));
+        /* A range no DV and stat exp fit gives the widest range of the new setting. */
+        hu_speed_range none = { 10, 11 };
+        hu_speed_range w = hu_speed_rescale(none, 90, 50, 0, 65535, 0, 65535);
+        CHECK_EQ(w.min, full.min);
+        CHECK_EQ(w.max, full.max);
+    }
+
     TEST_DONE();
 }

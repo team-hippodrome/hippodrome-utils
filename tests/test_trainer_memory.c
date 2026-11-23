@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+uint32_t hu_crc32(const uint8_t* p, size_t n); /* src/file_io.h */
+
 int main(void) {
     hu_tm* tm = hu_tm_new();
     hu_tm_key k = { HU_GAME_STADIUM_ZERO, 2, 0, 0, 3 };
@@ -43,6 +45,32 @@ int main(void) {
     CHECK(pika->flags & HU_TM_MON_HAS_SPEED);
     CHECK_EQ(pika->speed.min, 70);
     CHECK_EQ(pika->speed.max, 80);
+
+    /* A fresh estimate is under the base rules' stat exp. Under Stat Exp difficulty, the stored one is adjusted. */
+    CHECK_EQ(pika->se_min, 0);
+    CHECK_EQ(pika->se_max, 65535);
+    {
+        hu_speed_range got;
+        CHECK(hu_tm_mon_speed(pika, 90, 0, 65535, &got));
+        CHECK_EQ(got.min, 70);
+        CHECK_EQ(got.max, 80);
+        CHECK(hu_tm_mon_speed(pika, 90, 65535, 65535, &got));
+        CHECK(got.min >= hu_gb_stat(90, 0, 65535, 30));
+        CHECK(!hu_tm_mon_speed(hu_tm_find_mon(hu_tm_find(tm, k), 95), 35, 0, 65535, &got));
+        /* recording under another setting moves the stored range to it first, then keeps the new setting */
+        hu_speed_range hard = hu_speed_initial_se(90, 30, 36863, 65535);
+        hu_tm_record_speed_se(tm, k, 25, 90, hard, 36863, 65535);
+        pika = hu_tm_find_mon(hu_tm_find(tm, k), 25);
+        CHECK_EQ(pika->se_min, 36863);
+        CHECK_EQ(pika->se_max, 65535);
+        hu_speed_range was = hu_speed_rescale(b, 90, 30, 0, 65535, 36863, 65535);
+        hu_speed_range was2 = hu_speed_rescale(a, 90, 30, 0, 65535, 36863, 65535);
+        CHECK(pika->speed.min >= was.min && pika->speed.min >= was2.min);
+        CHECK(pika->speed.max <= was.max && pika->speed.max <= was2.max);
+        hu_tm_record_speed(tm, k, 25, a); /* (back to the base rules for the checks below) */
+        pika = hu_tm_find_mon(hu_tm_find(tm, k), 25);
+        CHECK_EQ(pika->se_min, 0);
+    }
 
     /* Seeing the team again keeps what was learned; a level change drops the speed estimate. */
     hu_tm_record_team(tm, k, team, 2);
@@ -95,6 +123,33 @@ int main(void) {
     CHECK_EQ(hu_tm_find_mon(t2, 25)->level, 31);
     CHECK_EQ(hu_tm_find_mon(t2, 95)->moves[1], 157);
     CHECK(strcmp((const char*)t2->name, "\xA4\xE0\xA4\xB7 BUG CATCHER") == 0);
+
+    /* The stat exp range survives the file; a file from before it (shorter records) loads under the base rules. */
+    hu_tm_record_speed_se(tm, k, 95, 70, (hu_speed_range){ 60, 70 }, 4096, 65535);
+    CHECK_EQ(hu_tm_save(tm, path), HU_TM_OK);
+    CHECK_EQ(hu_tm_load(tm2, path), HU_TM_OK);
+    CHECK_EQ(hu_tm_find_mon(hu_tm_find(tm2, k), 95)->se_min, 4096);
+    {
+        uint8_t* data;
+        size_t size = hu_tm_serialize(tm, &data);
+        unsigned rec = data[6] | (data[7] << 8), count = data[8], old_rec = rec - 24;
+        size_t old_size = 12 + (size_t)count * old_rec + 4;
+        uint8_t* old = (uint8_t*)calloc(1, old_size);
+        uint32_t crc;
+        memcpy(old, data, 12);
+        old[6] = (uint8_t)old_rec;
+        old[7] = (uint8_t)(old_rec >> 8);
+        for (unsigned i = 0; i < count; i++) memcpy(old + 12 + i * old_rec, data + 12 + i * rec, old_rec);
+        crc = hu_crc32(old, old_size - 4);
+        for (int i = 0; i < 4; i++) old[old_size - 4 + i] = (uint8_t)(crc >> (8 * i));
+        CHECK_EQ(hu_tm_deserialize(tm2, old, old_size), HU_TM_OK);
+        const hu_tm_mon* onix = hu_tm_find_mon(hu_tm_find(tm2, k), 95);
+        CHECK_EQ(onix->se_min, 0);
+        CHECK_EQ(onix->se_max, 65535);
+        CHECK_EQ(onix->speed.min, 60);
+        free(old);
+        free(data);
+    }
 
     /* A damaged file is refused and leaves the store empty. */
     FILE* f = fopen(path, "r+b");
