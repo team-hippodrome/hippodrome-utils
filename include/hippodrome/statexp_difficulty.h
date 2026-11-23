@@ -1,9 +1,10 @@
 /* Stat Exp difficulty (docs/specs/STATEXP_DIFFICULTY.md): the player sets the lowest and highest stat experience
  * that rental Pokémon and opponent (COM) Pokémon can have, as two separate settings.
  *
- * Each setting is Vanilla (the game's own values, the default), one of five presets that split 0..65535 into fifths
- * (Casual 0-13107, Easy 13107-26214, Medium 26214-39321, Hard 39321-52428, Kaizo 52428-65535), or Custom (the
- * player's own lowest and highest value). A range moves each of the five stat experience values (HP, Attack,
+ * Each setting is Vanilla (the game's own values, the default), one of five presets that split 0..65535 into fifths,
+ * or Custom (the player's own lowest and highest value). The presets are difficulty labels, so they run the other way
+ * for the player's side (hu_se_side): for opponents Casual is 0-13107 up to Kaizo 52428-65535, for rentals Casual is
+ * 52428-65535 (strong rentals) down to Kaizo 0-13107. A range moves each of the five stat experience values (HP, Attack,
  * Defense, Speed, Special: Gen 1 and 2 store one per stat, none is derived) that lies outside it to the nearer end
  * (a clamp); values inside it are left as the game made them. A custom range whose maximum is below its minimum is
  * an error (hu_se_errors): the port shows it and the setting acts as vanilla until it is fixed.
@@ -27,14 +28,17 @@ extern "C" {
 
 typedef enum hu_se_mode {
     HU_SE_VANILLA = 0, /* the game's own values (the default) */
-    HU_SE_CASUAL,      /* 0 - 13107 */
-    HU_SE_EASY,        /* 13107 - 26214 */
-    HU_SE_MEDIUM,      /* 26214 - 39321 */
-    HU_SE_HARD,        /* 39321 - 52428 */
-    HU_SE_KAIZO,       /* 52428 - 65535 */
+    HU_SE_CASUAL,      /* opponents 0 - 13107, rentals 52428 - 65535 */
+    HU_SE_EASY,        /* opponents 13107 - 26214, rentals 39321 - 52428 */
+    HU_SE_MEDIUM,      /* 26214 - 39321 for both */
+    HU_SE_HARD,        /* opponents 39321 - 52428, rentals 13107 - 26214 */
+    HU_SE_KAIZO,       /* opponents 52428 - 65535, rentals 0 - 13107 */
     HU_SE_CUSTOM,      /* custom_min - custom_max */
     HU_SE_MODE_COUNT
 } hu_se_mode;
+
+/* Whose Pokémon a setting is for: harder means more Stat Exp for opponents and less for the player's rentals. */
+typedef enum hu_se_side { HU_SE_OPPONENT = 0, HU_SE_RENTAL = 1 } hu_se_side;
 
 /* One setting (rental or opponent). The custom bounds are kept while a preset is picked, so switching back to
  * Custom finds them again. */
@@ -51,7 +55,7 @@ const char* hu_se_mode_name(int mode);
 
 /* The range the setting stands for, in *min / *max; false (and nothing written) for Vanilla, an unknown mode or a
  * custom range with errors. */
-bool hu_se_range(const hu_se_setting* setting, uint16_t* min, uint16_t* max);
+bool hu_se_range(const hu_se_setting* setting, hu_se_side side, uint16_t* min, uint16_t* max);
 
 /* What is wrong with a custom range (0 when nothing is, and always 0 for the other modes). */
 enum { HU_SE_ORDER = 1 << 0 /* maximum below the minimum */ };
@@ -60,10 +64,10 @@ unsigned hu_se_errors(const hu_se_setting* setting);
 const char* hu_se_error_text(unsigned error_bit);
 
 /* True when the setting changes anything (hu_se_range would return true). */
-bool hu_se_active(const hu_se_setting* setting);
+bool hu_se_active(const hu_se_setting* setting); /* (the same for both sides) */
 
 /* Clamps each of the five stat experience values into the setting's range in place (nothing when not active). */
-void hu_se_apply(const hu_se_setting* setting, uint16_t stat_exp[HU_SE_STAT_COUNT]);
+void hu_se_apply(const hu_se_setting* setting, hu_se_side side, uint16_t stat_exp[HU_SE_STAT_COUNT]);
 
 #ifdef __cplusplus
 }
