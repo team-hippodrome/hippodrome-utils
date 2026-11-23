@@ -7,13 +7,11 @@ hu_speed_range hu_speed_initial(uint8_t base_speed, uint8_t level) {
     return r;
 }
 
+/* As hu_se_bounds_apply holds a value: raised to the minimum, then lowered to the maximum. */
 static uint16_t clamp_se(uint32_t e, uint16_t lo, uint16_t hi) {
-    if (lo > hi) {
-        uint16_t t = lo;
-        lo = hi;
-        hi = t;
-    }
-    return (uint16_t)(e < lo ? lo : e > hi ? hi : e);
+    if (e < lo) e = lo;
+    if (e > hi) e = hi;
+    return (uint16_t)e;
 }
 
 hu_speed_range hu_speed_initial_se(uint8_t base_speed, uint8_t level, uint16_t se_min, uint16_t se_max) {
