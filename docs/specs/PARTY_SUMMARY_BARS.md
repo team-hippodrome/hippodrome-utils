@@ -36,6 +36,8 @@ Effects that are part of how a pokemon looks (such as the flames of Charizard an
   - All other status aliments should have the model's idle animation play at half speed.
 - Upon the model's reference fainting, the model shall play its fainting animation (every pokemon has its own) and then hold the last frame of it, with a grey coloration afterwards
 
+On the player's side in the battle order select screen: all models should start as Unknown and change to Picked as the player picks them. When the required number of pokemon is picked for the battle, all non-picked pokemon should change their model status to Not Picked
+
 The model never copies the battle's reactions, such as being hit: it only ever shows its idle, sleeping or frozen animation, or the held last frame of its fainting animation.
 
 The model should update upon using transform. The model should NOT update upon having an active substitute.
@@ -50,6 +52,8 @@ The card should track display hp, not internal game HP.
 
 ## Moves
 All moves are revealed on the player's Bar in single player. Moves on the COM's side are reveal only as they are used, or if trainer memory is on, according to the save files' trainer memory.
+
+Moves should be in four rows, one move per row. Space Scaling should be adjusted that overflow the text area by 1% to 10%. Moves that overflow the area by more than 10% should have their move name scroll back and forth.
 
 Moves are only revealed as they are used in multiplayer.
 
