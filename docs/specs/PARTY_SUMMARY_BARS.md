@@ -19,11 +19,13 @@ A card can have the following stats:
 - Not Picked (not Picked for the battle in formats where you bring less than your full party)
 - Statused (volatile Status condition like poison, sleep)
 - Fainted
-- Unknown (for when the opposing side has not reveal all pokemon picked for battle)
+- Unknown (not yet picked on the order screen or revealed in battle)
 
 The Card state should  only update when the visual indication that it updates (status gain, fainting, switch out to reveal last unrevealed picked pokemon). 
 
-All  pokemon not picked can be labeled Not Picked instead of unknown only when all picked pokemon for that side have been revealed (have switched in at least once)
+When the viewer does not already know a side's picks, unshown Pokémon remain Unknown until the full number of picks has been revealed by send-outs. The remaining Unknown cards then become Not Picked. If the game shows the complete selection, the cards can reflect it immediately.
+
+On the viewer's battle order selection screen, all cards start Unknown, even if the whole party can be brought. Each selection marks its card Picked; once the required number is selected, the remaining cards become Not Picked. Taking back a selection returns that card and any inferred Not Picked cards to Unknown. Once a Pokémon has been sent out, it cannot be unpicked, and the inferred Not Picked cards stay known.
 
 ## Model
 The model of the pokemon should be the same model as if they pokemon where active in battle. The card loads its own copy of that model, built with the same pipeline the battle's thumbnail uses for its model.
@@ -36,11 +38,9 @@ Effects that are part of how a pokemon looks (such as the flames of Charizard an
   - All other status aliments should have the model's idle animation play at half speed.
 - Upon the model's reference fainting, the model shall play its fainting animation (every pokemon has its own) and then hold the last frame of it, with a grey coloration afterwards
 
-On the player's side in the battle order select screen: all models should start as Unknown and change to Picked as the player picks them. When the required number of pokemon is picked for the battle, all non-picked pokemon should change their model status to Not Picked
-
 The model never copies the battle's reactions, such as being hit: it only ever shows its idle, sleeping or frozen animation, or the held last frame of its fainting animation.
 
-The model should update upon using transform. The model should NOT update upon having an active substitute.
+The model should update upon using Transform. While transformed, the card shows the copied Speed range even if the target is the same species; the original range is shown again on withdrawal. The model should NOT update upon having an active substitute.
 The model is on the left side of the card for the left side trainer and the right side of the card for the right side trainer
 
 Large pokemon such as Onix should have their card's model's scale changes so that the face(s) of hte pokemon displays prominently when not fainted.
