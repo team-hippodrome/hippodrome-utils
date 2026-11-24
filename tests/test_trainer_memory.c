@@ -67,9 +67,16 @@ int main(void) {
         hu_speed_range was2 = hu_speed_rescale(a, 90, 30, 0, 65535, 36863, 65535);
         CHECK(pika->speed.min >= was.min && pika->speed.min >= was2.min);
         CHECK(pika->speed.max <= was.max && pika->speed.max <= was2.max);
-        hu_tm_record_speed(tm, k, 25, a); /* (back to the base rules for the checks below) */
+        hu_speed_range recorded = pika->speed;
+        hu_tm_record_speed(tm, k, 25, a);
         pika = hu_tm_find_mon(hu_tm_find(tm, k), 25);
-        CHECK_EQ(pika->se_min, 0);
+        CHECK_EQ(pika->se_min, 36863);
+        CHECK_EQ(pika->se_max, 65535);
+        CHECK_EQ(pika->speed.min, recorded.min);
+        CHECK_EQ(pika->speed.max, recorded.max);
+        CHECK(hu_tm_mon_speed(pika, 90, 0, 65535, &got));
+        CHECK(got.min <= recorded.min);
+        CHECK_EQ(got.max, recorded.max);
     }
 
     /* Seeing the team again keeps what was learned; a level change drops the speed estimate. */
@@ -127,6 +134,8 @@ int main(void) {
     /* The stat exp range survives the file; a file from before it (shorter records) loads under the base rules. */
     hu_tm_record_speed_se(tm, k, 95, 70, (hu_speed_range){ 60, 70 }, 4096, 65535);
     CHECK_EQ(hu_tm_save(tm, path), HU_TM_OK);
+    hu_tm_record_speed(tm, k, 95, b);
+    CHECK(!hu_tm_dirty(tm));
     CHECK_EQ(hu_tm_load(tm2, path), HU_TM_OK);
     CHECK_EQ(hu_tm_find_mon(hu_tm_find(tm2, k), 95)->se_min, 4096);
     {
@@ -136,6 +145,7 @@ int main(void) {
         size_t old_size = 12 + (size_t)count * old_rec + 4;
         uint8_t* old = (uint8_t*)calloc(1, old_size);
         uint32_t crc;
+        CHECK_EQ(size, 12 + (size_t)count * rec + 4);
         memcpy(old, data, 12);
         old[6] = (uint8_t)old_rec;
         old[7] = (uint8_t)(old_rec >> 8);

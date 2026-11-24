@@ -102,12 +102,14 @@ void hu_tm_record_team(hu_tm* tm, hu_tm_key key, const hu_tm_team_entry* team, i
 void hu_tm_record_name(hu_tm* tm, hu_tm_key key, const char* name);
 /* Only marks the trainer as reached (for games that show no team before the battle). */
 void hu_tm_record_reached(hu_tm* tm, hu_tm_key key);
-/* The trainer's `species` was sent out / used `move`. Creates the trainer and the Pokémon if needed; a move not in the
- * known moveset takes a free slot (a game that shows no moveset learns it this way), or is dropped if all 4 are known. */
+/* The trainer's `species` was sent out. Creates the trainer and the Pokémon if needed. */
 void hu_tm_record_sent_out(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t level);
+/* The trainer's `species` attempted `move`, even if it missed or failed. Do not call if it could not act.
+ * Creates the trainer and the Pokémon if needed; a move not in the known moveset takes a free slot or is dropped
+ * if all 4 are known. */
 void hu_tm_record_move(hu_tm* tm, hu_tm_key key, uint8_t species, uint16_t move);
-/* Merges a speed range learned in battle with the stored one (hu_speed_intersect), under the base rules' stat
- * experience (0 to 65535). */
+/* Deprecated: use hu_tm_record_speed_se. Merges estimates under the base rules' Stat Exp (0 to 65535).
+ * Leaves an estimate recorded under other bounds unchanged because this call cannot rescale it. */
 void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range);
 /* The same, learned while the opponents' stat experience was held in [se_min, se_max] (Stat Exp difficulty). A stored
  * estimate from another range is first adjusted to this one (hu_speed_rescale), which needs the species' base Speed. */

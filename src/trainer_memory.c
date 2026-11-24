@@ -218,7 +218,12 @@ void hu_tm_record_move(hu_tm* tm, hu_tm_key key, uint8_t species, uint16_t move)
 }
 
 void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_range range) {
-    /* (the base rules: no stored estimate needs adjusting, so the base Speed is not used) */
+    const hu_tm_mon* mon = hu_tm_find_mon(hu_tm_find(tm, key), species);
+    /* The legacy call does not know the species' base Speed, so it cannot rescale this estimate. */
+    if (mon != NULL && (mon->flags & HU_TM_MON_HAS_SPEED) &&
+        (mon->se_min != 0 || mon->se_max != HU_STAT_EXP_MAX)) {
+        return;
+    }
     hu_tm_record_speed_se(tm, key, species, 0, range, 0, HU_STAT_EXP_MAX);
 }
 
