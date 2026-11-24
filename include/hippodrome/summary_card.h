@@ -23,7 +23,7 @@ typedef enum hu_card_state {
     HU_CARD_NOT_PICKED = 1, /* left out of a battle where fewer than the full party are brought */
     HU_CARD_STATUSED = 2,   /* brought, with a status condition */
     HU_CARD_FAINTED = 3,
-    HU_CARD_UNKNOWN = 4, /* the opponent has not shown whether it brought this one yet */
+    HU_CARD_UNKNOWN = 4, /* not yet picked on the order screen or revealed in battle */
 } hu_card_state;
 
 typedef enum hu_status {
@@ -43,6 +43,8 @@ enum hu_card_flags {
     HU_CARD_F_ACTIVE = 1 << 3,   /* in battle now */
     HU_CARD_F_FAINTED = 1 << 4,
     HU_CARD_F_SUBSTITUTE = 1 << 5, /* behind a substitute: the model does not change for it */
+    HU_CARD_F_TRANSFORMED = 1 << 6,
+    HU_CARD_F_PICK_INFERRED = 1 << 7, /* Not Picked by fill-up, not from an explicit pick mask */
 };
 
 typedef struct hu_card {
@@ -76,16 +78,26 @@ typedef struct hu_side {
 
 /* ---- feeding the cards ---- */
 
-/* Starts a side for a new battle: `count` party Pokémon, of which `brought` fight. Clears everything. */
+/* Starts a side for a new battle: `count` party Pokémon, of which `brought` fight. Clears everything and marks all
+ * cards Picked if the whole party fights. */
 void hu_side_init(hu_side* side, int count, int brought, hu_reveal_rule reveal);
+/* Starts an order selection screen: like hu_side_init, but all picks start Unknown, even for a whole-party battle. */
+void hu_side_init_order_select(hu_side* side, int count, int brought, hu_reveal_rule reveal);
 /* Fills card `i` from the party (species, level, HP, the moveset). The speed range starts as the species' widest
  * (hu_speed_initial) on a hidden side and exact on the viewer's own (`known_speed` != 0). */
 void hu_side_set_mon(hu_side* side, int i, uint8_t species, uint8_t level, uint16_t hp, uint16_t max_hp,
                      const uint16_t moves[HU_CARD_MOVES], uint8_t base_speed, uint16_t known_speed);
-/* The viewer knows which ones were picked (its own side, or a game that shows both picks): `picked_mask` bit i. */
+/* The viewer learns the complete selection (its own side, or a game that shows both picks): `picked_mask` bit i.
+ * Cards that have been sent out stay Picked even if the mask omits them. */
 void hu_side_set_picked(hu_side* side, uint8_t picked_mask);
-/* Card `i` came into battle (marks it picked, active, and the others inactive). Once as many have been seen as the side
- * brings, the cards still unknown become Not Picked. */
+/* Picks an Unknown card on the order screen. Once `brought` picks are known, any remaining Unknown cards become Not
+ * Picked. Repeated picks and picks past the selection limit do nothing. */
+void hu_side_pick(hu_side* side, int i);
+/* Takes back a pick and returns it to Unknown. Before the first send-out, this also returns inferred Not Picked cards
+ * to Unknown, but not cards explicitly known from hu_side_set_picked. A sent-out card cannot be unpicked. */
+void hu_side_unpick(hu_side* side, int i);
+/* Card `i` came into battle (marks it picked, active, and the others inactive). Once as many picks are known as the
+ * side brings, the cards still Unknown become Not Picked. */
 void hu_side_send_out(hu_side* side, int i);
 /* Card `i` used the move in slot `slot` (0-3): reveals that slot. */
 void hu_side_move_used(hu_side* side, int i, int slot);

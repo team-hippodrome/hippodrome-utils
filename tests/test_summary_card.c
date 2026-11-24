@@ -75,6 +75,7 @@ int main(void) {
     /* Transform: model and speed follow the target until withdrawn; substitute changes nothing on the model. */
     hu_speed_range copied = { 120, 120 };
     hu_side_transform(&s, 4, 150, copied);
+    CHECK(s.cards[4].flags & HU_CARD_F_TRANSFORMED);
     CHECK_EQ(s.cards[4].model_species, 150);
     CHECK_EQ(hu_card_shown_speed(&s.cards[4]).min, 120);
     CHECK_EQ(s.cards[4].speed.min, 95); /* the saved estimate is untouched */
@@ -83,7 +84,21 @@ int main(void) {
     hu_side_withdraw(&s, 4);
     CHECK_EQ(s.cards[4].model_species, 29);
     CHECK(!(s.cards[4].flags & HU_CARD_F_SUBSTITUTE));
+    CHECK(!(s.cards[4].flags & HU_CARD_F_TRANSFORMED));
     CHECK_EQ(hu_card_shown_speed(&s.cards[4]).min, 95);
+
+    /* An unchanged model species does not mean the card is untransformed. */
+    const hu_speed_range same_species = { 102, 117 };
+    hu_side_transform(&s, 4, 29, same_species);
+    CHECK_EQ(s.cards[4].model_species, s.cards[4].species);
+    CHECK(s.cards[4].flags & HU_CARD_F_TRANSFORMED);
+    CHECK_EQ(hu_card_shown_speed(&s.cards[4]).min, 102);
+    CHECK_EQ(hu_card_shown_speed(&s.cards[4]).max, 117);
+    hu_side_set_mon(&s, 4, 132, 50, 100, 100, moves, 48, 99);
+    CHECK_EQ(s.cards[4].model_species, 132);
+    CHECK(!(s.cards[4].flags & HU_CARD_F_TRANSFORMED));
+    CHECK_EQ(hu_card_shown_speed(&s.cards[4]).min, 99);
+    CHECK_EQ(hu_card_shown_speed(&s.cards[4]).max, 99);
 
     /* The viewer's own side: everything shown, exact speed, picks known. */
     hu_side me;
@@ -94,12 +109,62 @@ int main(void) {
     hu_side_set_picked(&me, 0x5);
     CHECK_EQ(hu_card_get_state(&me.cards[0]), HU_CARD_PICKED);
     CHECK_EQ(hu_card_get_state(&me.cards[1]), HU_CARD_NOT_PICKED);
+    hu_side_unpick(&me, 0);
+    CHECK_EQ(hu_card_get_state(&me.cards[0]), HU_CARD_UNKNOWN);
+    CHECK_EQ(hu_card_get_state(&me.cards[1]), HU_CARD_NOT_PICKED); /* explicitly known, not inferred */
+    hu_side_send_out(&me, 2);
+    hu_side_set_picked(&me, 0);
+    CHECK_EQ(hu_card_get_state(&me.cards[2]), HU_CARD_PICKED); /* a mask cannot erase battle evidence */
 
-    /* Whole party fights: no unknowns. */
+    /* Order selection fills up only on the last pick, and can be edited before a send-out. */
+    hu_side order;
+    hu_side_init_order_select(&order, 6, 3, HU_REVEAL_ALL);
+    for (int i = 0; i < 6; i++) {
+        hu_side_set_mon(&order, i, (uint8_t)(25 + i), 50, 100, 100, moves, 90, 120);
+        CHECK_EQ(hu_card_get_state(&order.cards[i]), HU_CARD_UNKNOWN);
+    }
+    hu_side_pick(&order, -1);
+    hu_side_pick(&order, 6);
+    hu_side_pick(&order, 3);
+    hu_side_pick(&order, 3);
+    hu_side_pick(&order, 1);
+    CHECK_EQ(hu_card_get_state(&order.cards[3]), HU_CARD_PICKED);
+    CHECK_EQ(hu_card_get_state(&order.cards[1]), HU_CARD_PICKED);
+    CHECK_EQ(hu_card_get_state(&order.cards[2]), HU_CARD_UNKNOWN);
+    hu_side_pick(&order, 4);
+    hu_side_pick(&order, 2);
+    hu_side_unpick(&order, 2); /* cannot undo a pick that wasn't made */
+    CHECK_EQ(hu_card_get_state(&order.cards[4]), HU_CARD_PICKED);
+    CHECK_EQ(hu_card_get_state(&order.cards[2]), HU_CARD_NOT_PICKED);
+    hu_side_unpick(&order, 1);
+    CHECK_EQ(hu_card_get_state(&order.cards[1]), HU_CARD_UNKNOWN);
+    CHECK_EQ(hu_card_get_state(&order.cards[2]), HU_CARD_UNKNOWN);
+    CHECK_EQ(hu_card_get_state(&order.cards[3]), HU_CARD_PICKED);
+    hu_side_pick(&order, 2);
+    CHECK_EQ(hu_card_get_state(&order.cards[2]), HU_CARD_PICKED);
+    CHECK_EQ(hu_card_get_state(&order.cards[1]), HU_CARD_NOT_PICKED);
+
+    /* Send-outs are permanent even after withdrawal; inferred exclusions are retained. */
+    hu_side_send_out(&order, 3);
+    hu_side_send_out(&order, 4);
+    hu_side_unpick(&order, 3);
+    hu_side_unpick(&order, 2);
+    CHECK_EQ(hu_card_get_state(&order.cards[3]), HU_CARD_PICKED);
+    CHECK(!(order.cards[3].flags & HU_CARD_F_ACTIVE));
+    CHECK_EQ(hu_card_get_state(&order.cards[2]), HU_CARD_UNKNOWN);
+    CHECK_EQ(hu_card_get_state(&order.cards[1]), HU_CARD_NOT_PICKED);
+
+    /* Whole-party battles have no unknowns, but selecting their order still starts Unknown. */
     hu_side all;
     hu_side_init(&all, 3, 3, HU_REVEAL_AS_USED);
     hu_side_set_mon(&all, 0, 25, 50, 100, 100, moves, 90, 0);
     CHECK_EQ(hu_card_get_state(&all.cards[0]), HU_CARD_PICKED);
+    hu_side_init_order_select(&all, 3, 3, HU_REVEAL_ALL);
+    hu_side_set_mon(&all, 0, 25, 50, 100, 100, moves, 90, 120);
+    CHECK_EQ(hu_card_get_state(&all.cards[0]), HU_CARD_UNKNOWN);
+    hu_side_pick(&all, 0);
+    CHECK_EQ(hu_card_get_state(&all.cards[0]), HU_CARD_PICKED);
+    CHECK_EQ(hu_card_get_state(&all.cards[1]), HU_CARD_UNKNOWN);
 
     /* HP bar: GB colour bands. */
     CHECK_EQ(hu_hp_band_of(100, 100), HU_HP_GREEN);
