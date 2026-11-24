@@ -27,7 +27,7 @@ Each control has 7 options: `Vanilla`, `Casual`, `Easy`, `Medium`, `Hard`, `Kaiz
   - `Hard` = `4096`
   - `Kaizo` = `0`
 
-These values are selectable via drop down, with "custom" spawning a slider that.
+These values are selectable via drop down, with `Custom` spawning a slider that sets an arbitrary value from 0 to 65535.
 
 These settings do not apply in free battle.
 

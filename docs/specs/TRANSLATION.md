@@ -39,6 +39,8 @@ The repos should only contain functional text when it is *essential* for underst
 
 Translations of ROM text are allowed.
 
+Localization CSVs never count as non-functional text. This covers every column of the translation data files (`{code}.csv`, `{code}_localized.csv`, `kanji.csv`, Plethron's `ai.csv` and `localized.csv`), including the source-language columns whose content is verbatim ROM text, such as a `ja` column whose md5 matches the row's `md5`.
+
 ## Translation Architecture For Stadium 1 and 2
 Translations are stored in csv files in a `translation` folder at the root of the repo. For each version of the ROM, the repo stores a csv that stores the md5-hashes and address points of all text that appears in the that ROM. The other columns of that CSV contain the plaintext translation of the string into the various languages.
 
@@ -86,13 +88,15 @@ Pokemon nicknames are offered in purely transliterated form in the standard CSV 
 
 All trainers in Stadium 1 and 2 have nicknames that follow some sort of gimmick (for example a prefix, suffix, or transformation). Localized names should attempt to apply this gimmick to the native names of the pokemon species. 
 
-Example:
+Example (the language columns always follow one order, `en`, `es`, `jp`, `pt`, `de`, `ko`, `fr`, `it`, with the ROM's own language dropped from its per-ROM CSV and its `{code}_localized.csv`):
 
-|id|md5|address|jp|en|es|de|pt|ko|fr|it|
+|id|md5|address|en|es|jp|pt|de|ko|fr|it|
 |---|---|---|---|---|---|---|---|---|---|---|
-BURGLAR_ARCANINE|e163a4b50e6e2f74c8ba807434ee2cf3|82402390 82403310 82404290 82405210|どろンディ|Thiefcanine|Ladricanine|Diebkani|Ladracanine|도둑디|Volcanin|Ladrocanine
+|BURGLAR_ARCANINE|e163a4b50e6e2f74c8ba807434ee2cf3|82402390 82403310 82404290 82405210|Thiefcanine|Ladricanine|どろンディ|Ladracanine|Diebkani|도둑디|Volcanin|Ladrocanine|
 
 ## Language Selection Procedure
+
+Stadium Zero was released only in Japanese, so there is no ROM of another region to dump: the official-language branch below cannot apply to it. Plethron implements its own first-boot language selection (a language-select screen before the logo, offering the AI translations), which is the accepted behavior for Stadium Zero. The procedure below applies to Stadium 1 and 2.
 
 Upon the user first booting the port: if their system locale is different from the language of their provided ROM AND their locale is a supported language, they should get the following prompts translated into both their locale and ROM language.
 

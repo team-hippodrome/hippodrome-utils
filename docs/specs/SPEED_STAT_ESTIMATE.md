@@ -12,6 +12,6 @@ A turn where either side switches instead of using a move says nothing about spe
 
 The speed stat estimate UI should update on speed increases/decrease and on a pokemon using Transform, but that should NOT overwrite the auxiliary save file of estimates. Estimates should normalize any speed boosts/decreases that are active in the battle.
 
-The estimate should account for the paralysis speed stat halving.
+The estimate should account for the paralysis speed stat cut. Gen 1 and 2 quarter the speed stat (a right shift by 2) rather halve it, and the estimate must follow the games' own calculation.
 
 The speed stat estimate side file should store the Stat Experience difficult settings it was recorded with and make adjustments according to the stat formula for the game if that setting is found to have changed from a previous save.
