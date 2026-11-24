@@ -23,8 +23,10 @@ hu_hue_id hu_hue_id_of(const void* data, size_t size) {
 }
 
 int16_t hu_hue_nickname_shift(uint8_t sum, int16_t min_degrees, int16_t max_degrees) {
-    /* as the games compute it: ((max - min) << 6) * sum / 255 + (min << 6), in s32 */
-    int32_t v = (((int32_t)(max_degrees - min_degrees) << 6) * (int32_t)sum) / 255 + ((int32_t)min_degrees << 6);
+    /* as the games compute it: ((max - min) << 6) * sum / 255 + (min << 6), in s32. Written as multiplications:
+     * shifting a negative int left is undefined in C11, and min is negative for most species. */
+    int32_t v = ((int32_t)(max_degrees - min_degrees) * HU_HUE_UNITS_PER_DEGREE) * (int32_t)sum / 255 +
+                (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE;
     return (int16_t)v;
 }
 
@@ -58,11 +60,17 @@ int16_t hu_hue_signed(int16_t shift) {
 }
 
 bool hu_hue_in_range(int16_t shift, int16_t min_degrees, int16_t max_degrees) {
+    int32_t lo = (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE;
+    int32_t hi = (int32_t)max_degrees * HU_HUE_UNITS_PER_DEGREE;
     int32_t v = hu_hue_signed(shift);
     if (full_range(min_degrees, max_degrees)) {
         return true;
     }
-    return v >= (int32_t)min_degrees * HU_HUE_UNITS_PER_DEGREE && v <= (int32_t)max_degrees * HU_HUE_UNITS_PER_DEGREE;
+    if (lo > hi) {
+        /* a range crossing the +-180 wrap point (the games' species tables have none): both parts round the wheel */
+        return v >= lo || v <= hi;
+    }
+    return v >= lo && v <= hi;
 }
 
 int16_t hu_hue_clamp(int16_t shift, int16_t min_degrees, int16_t max_degrees) {

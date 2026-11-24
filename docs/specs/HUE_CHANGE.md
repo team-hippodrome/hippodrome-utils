@@ -21,4 +21,5 @@ three choices (bike, 2026-11-22):
   (hu_hue_step_in_range). A choice stored while unrestricted that lies outside the range is drawn at the nearer end
   (hu_hue_clamp) but kept, so switching back shows it again.
 - Unrestricted: the whole color wheel in 15° steps (hu_hue_step).
-A few species' ranges are a full turn (Stadium Zero: Magneton, Onix and ten others), so for them both modes are the same.
+A few species' ranges are a full turn, so for them both modes are the same. Stadium Zero and Stadium 1 have the same
+nine: Geodude, Graveler, Magnemite, Magneton, Grimer, Muk, Onix, Rhyhorn and Rhydon.
