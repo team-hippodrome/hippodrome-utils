@@ -99,7 +99,8 @@ void hu_side_unpick(hu_side* side, int i);
 /* Card `i` came into battle (marks it picked, active, and the others inactive). Once as many picks are known as the
  * side brings, the cards still Unknown become Not Picked. */
 void hu_side_send_out(hu_side* side, int i);
-/* Card `i` used the move in slot `slot` (0-3): reveals that slot. */
+/* Card `i` attempted the move in `slot` (0-3): reveals that slot even on a miss or failure. Do not call if it could
+ * not act. */
 void hu_side_move_used(hu_side* side, int i, int slot);
 /* Reveals the move id `move` on card `i` if it is in its moveset (for trainer memory); returns whether it was. */
 bool hu_side_reveal_move(hu_side* side, int i, uint16_t move);
