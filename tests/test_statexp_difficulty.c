@@ -112,9 +112,19 @@ int main(void) {
         CHECK_EQ(hu_se_preset_value(HU_SE_VANILLA, HU_SE_OPPONENT), 0);
         CHECK_EQ(hu_se_preset_value(HU_SE_CUSTOM, HU_SE_OPPONENT), 0);
 
+        /* Speed estimation uses the base range when both bounds are Vanilla, regardless of saved custom values. */
+        b.min.custom = 100;
+        b.max.custom = 200;
+        hu_se_bounds_se_range(&b, HU_SE_OPPONENT, &lo, &hi);
+        CHECK_EQ(lo, 0);
+        CHECK_EQ(hi, 65535);
+
         /* only a Minimum: a floor, no ceiling */
         b.min.mode = HU_SE_MEDIUM;
         CHECK(hu_se_bounds_active(&b));
+        hu_se_bounds_se_range(&b, HU_SE_OPPONENT, &lo, &hi);
+        CHECK_EQ(lo, 16384);
+        CHECK_EQ(hi, 65535);
         {
             uint16_t se[5] = { 0, 16383, 16384, 40000, 65535 };
             hu_se_bounds_apply(&b, HU_SE_OPPONENT, se);
@@ -128,6 +138,9 @@ int main(void) {
         b = hu_se_bounds_vanilla();
         b.max.mode = HU_SE_CUSTOM;
         b.max.custom = 1000;
+        hu_se_bounds_se_range(&b, HU_SE_RENTAL, &lo, &hi);
+        CHECK_EQ(lo, 0);
+        CHECK_EQ(hi, 1000);
         {
             uint16_t se[5] = { 0, 999, 1000, 1001, 65535 };
             hu_se_bounds_apply(&b, HU_SE_RENTAL, se);
@@ -148,8 +161,18 @@ int main(void) {
         b = hu_se_bounds_vanilla();
         b.min.mode = HU_SE_HARD;  /* opponents: 36863 */
         b.max.mode = HU_SE_EASY;  /* 4096 */
+        hu_se_bounds_se_range(&b, HU_SE_RENTAL, &lo, &hi);
+        CHECK_EQ(lo, 4096);
+        CHECK_EQ(hi, 36863);
+        /* The helper reports each bound as-is; it does not validate an edit. */
+        hu_se_bounds_se_range(&b, HU_SE_OPPONENT, &lo, &hi);
+        CHECK_EQ(lo, 36863);
+        CHECK_EQ(hi, 4096);
         CHECK(hu_se_bounds_fix(&b, HU_SE_OPPONENT, true));
         CHECK_EQ(b.max.mode, HU_SE_HARD);
+        hu_se_bounds_se_range(&b, HU_SE_OPPONENT, &lo, &hi);
+        CHECK_EQ(lo, 36863);
+        CHECK_EQ(hi, 36863);
         /* a Maximum lowered below the Minimum takes the Minimum with it */
         b.min.mode = HU_SE_CUSTOM;
         b.min.custom = 30000;
@@ -171,6 +194,11 @@ int main(void) {
         b.min.mode = HU_SE_KAIZO;
         b.max.mode = HU_SE_CASUAL;
         CHECK(!hu_se_bounds_fix(&b, HU_SE_RENTAL, false)); /* 0 <= 65535 for rentals */
+
+        b.min.mode = b.max.mode = 42;
+        hu_se_bounds_se_range(&b, HU_SE_RENTAL, &lo, &hi);
+        CHECK_EQ(lo, 0);
+        CHECK_EQ(hi, 65535);
     }
 
     TEST_DONE();

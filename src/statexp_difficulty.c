@@ -84,6 +84,11 @@ bool hu_se_bound_value(const hu_se_bound* bound, hu_se_side side, uint16_t* out)
     return false;
 }
 
+void hu_se_bounds_se_range(const hu_se_bounds* bounds, hu_se_side side, uint16_t* se_min, uint16_t* se_max) {
+    if (!hu_se_bound_value(&bounds->min, side, se_min)) *se_min = 0;
+    if (!hu_se_bound_value(&bounds->max, side, se_max)) *se_max = HU_STAT_EXP_MAX;
+}
+
 bool hu_se_bounds_active(const hu_se_bounds* bounds) {
     uint16_t v;
     return hu_se_bound_value(&bounds->min, HU_SE_OPPONENT, &v) || hu_se_bound_value(&bounds->max, HU_SE_OPPONENT, &v);

@@ -1,13 +1,5 @@
-/* Stat Exp difficulty (docs/specs/STATEXP_DIFFICULTY.md): the player sets the lowest and highest stat experience
- * that rental Pokémon and opponent (COM) Pokémon can have, as two separate settings.
- *
- * Each setting is Vanilla (the game's own values, the default), one of five presets that split 0..65535 into fifths,
- * or Custom (the player's own lowest and highest value). The presets are difficulty labels, so they run the other way
- * for the player's side (hu_se_side): for opponents Casual is 0-13107 up to Kaizo 52428-65535, for rentals Casual is
- * 52428-65535 (strong rentals) down to Kaizo 0-13107. A range moves each of the five stat experience values (HP, Attack,
- * Defense, Speed, Special: Gen 1 and 2 store one per stat, none is derived) that lies outside it to the nearer end
- * (a clamp); values inside it are left as the game made them. A custom range whose maximum is below its minimum is
- * an error (hu_se_errors): the port shows it and the setting acts as vanilla until it is fixed.
+/* Stat Exp difficulty (docs/specs/STATEXP_DIFFICULTY.md): use hu_se_bounds for each side, with independent Minimum
+ * and Maximum settings for rental Pokémon and opponent (COM) Pokémon. Each bound is Vanilla, a preset or Custom.
  *
  * DVs are left alone: in Gen 1/2 the HP DV is made of the low bits of the other four, so a DV range could not hold
  * for HP (descoped from the spec).
@@ -28,17 +20,26 @@ extern "C" {
 
 typedef enum hu_se_mode {
     HU_SE_VANILLA = 0, /* the game's own values (the default) */
-    HU_SE_CASUAL,      /* opponents 0 - 13107, rentals 52428 - 65535 */
-    HU_SE_EASY,        /* opponents 13107 - 26214, rentals 39321 - 52428 */
-    HU_SE_MEDIUM,      /* 26214 - 39321 for both */
-    HU_SE_HARD,        /* opponents 39321 - 52428, rentals 13107 - 26214 */
-    HU_SE_KAIZO,       /* opponents 52428 - 65535, rentals 0 - 13107 */
-    HU_SE_CUSTOM,      /* custom_min - custom_max */
+    HU_SE_CASUAL,
+    HU_SE_EASY,
+    HU_SE_MEDIUM,
+    HU_SE_HARD,
+    HU_SE_KAIZO,
+    HU_SE_CUSTOM,
     HU_SE_MODE_COUNT
 } hu_se_mode;
 
 /* Whose Pokémon a setting is for: harder means more Stat Exp for opponents and less for the player's rentals. */
 typedef enum hu_se_side { HU_SE_OPPONENT = 0, HU_SE_RENTAL = 1 } hu_se_side;
+
+/* The mode's name for a UI ("Vanilla", "Casual", ..., "Custom"); "" for an unknown mode. */
+const char* hu_se_mode_name(int mode);
+
+/* ---- Deprecated single-setting API ----
+ *
+ * hu_se_setting and its operations are kept for compatibility with existing callers. They predate the current
+ * spec: each preset selects a range in fifths of 65535, from 0..13107 (Casual) to 52428..65535 (Kaizo) for
+ * opponents and the reverse for rentals. New callers should use hu_se_bounds and the quadratic presets below. */
 
 /* One setting (rental or opponent). The custom bounds are kept while a preset is picked, so switching back to
  * Custom finds them again. */
@@ -50,8 +51,6 @@ typedef struct hu_se_setting {
 
 /* Vanilla, with custom bounds 0-65535. */
 hu_se_setting hu_se_vanilla(void);
-/* The mode's name for a UI ("Vanilla", "Casual", ..., "Custom"); "" for an unknown mode. */
-const char* hu_se_mode_name(int mode);
 
 /* The range the setting stands for, in *min / *max; false (and nothing written) for Vanilla, an unknown mode or a
  * custom range with errors. */
@@ -77,10 +76,7 @@ void hu_se_apply(const hu_se_setting* setting, hu_se_side side, uint16_t stat_ex
  * so each step adds about a quarter of the most Stat Exp can add to a stat (its bonus grows with the square root);
  * for opponents Casual is 0 and Kaizo 65535, for rentals the other way round. A Minimum above the Maximum is never
  * left in place: hu_se_bounds_fix moves the bound the player did not just change to the other one. The settings are
- * not applied in Free Battle (the port's call: it knows its modes).
- *
- * The single-setting API above (hu_se_setting, fifths of 65535) is the first spec's, kept for ports that still use
- * it. */
+ * not applied in Free Battle (the port's call: it knows its modes). */
 
 /* One bound: `mode` is a hu_se_mode (HU_SE_VANILLA ... HU_SE_CUSTOM); `custom` is kept while a preset is picked. */
 typedef struct hu_se_bound {
@@ -99,6 +95,9 @@ hu_se_bounds hu_se_bounds_vanilla(void);
 uint16_t hu_se_preset_value(int mode, hu_se_side side);
 /* The bound's value in *out; false (nothing written) for Vanilla or an unknown mode. */
 bool hu_se_bound_value(const hu_se_bound* bound, hu_se_side side, uint16_t* out);
+/* Writes the numeric bounds for hu_speed_initial_se and hu_tm_record_speed_se. Vanilla or an unknown mode uses
+ * 0 for the Minimum and 65535 for the Maximum. The values are not reordered: validate edits with hu_se_bounds_fix. */
+void hu_se_bounds_se_range(const hu_se_bounds* bounds, hu_se_side side, uint16_t* se_min, uint16_t* se_max);
 /* True when either bound is not Vanilla. */
 bool hu_se_bounds_active(const hu_se_bounds* bounds);
 /* After the player changed one bound (`changed_min`: the Minimum, else the Maximum): when neither is Vanilla and the
