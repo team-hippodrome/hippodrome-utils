@@ -1,6 +1,8 @@
 #include "hippodrome/order_queue.h"
 #include "test.h"
 
+enum { OPEN_FRAME = 2, PICK_FRAME = 10 };
+
 static int run_command_phase(hu_order_queue* q, hu_oq_action* opened, int* pick_frame) {
     *opened = HU_OQ_NONE;
     *pick_frame = -1;
@@ -8,7 +10,7 @@ static int run_command_phase(hu_order_queue* q, hu_oq_action* opened, int* pick_
         hu_oq_action a = hu_oq_command_frame(q);
         if (a == HU_OQ_OPEN_FIGHT || a == HU_OQ_OPEN_SWITCH) {
             *opened = a;
-            CHECK_EQ(f, HU_OQ_OPEN_FRAME);
+            CHECK_EQ(f, OPEN_FRAME);
         } else if (a == HU_OQ_PICK) {
             *pick_frame = f;
             return q->slot;
@@ -21,7 +23,7 @@ int main(void) {
     hu_order_queue q;
     hu_oq_action opened;
     int pick_frame;
-    hu_oq_init(&q);
+    hu_oq_init(&q, OPEN_FRAME, PICK_FRAME);
     CHECK(!hu_oq_visible(&q));
 
     /* the diagram's edges */
@@ -61,7 +63,7 @@ int main(void) {
     CHECK_EQ(q.state, HU_OQ_HIDDEN);
     CHECK(!hu_oq_queued(&q));
 
-    /* a queued move is entered on the COM's timing */
+    /* a queued move is entered on the frames supplied by the port */
     hu_oq_z(&q);
     hu_oq_a(&q);
     hu_oq_pick(&q, 1);
@@ -71,7 +73,7 @@ int main(void) {
     CHECK(!hu_oq_a(&q)); /* the game's menu has the buttons now */
     CHECK_EQ(run_command_phase(&q, &opened, &pick_frame), 1);
     CHECK_EQ(opened, HU_OQ_OPEN_FIGHT);
-    CHECK_EQ(pick_frame, HU_OQ_PICK_FRAME);
+    CHECK_EQ(pick_frame, PICK_FRAME);
     CHECK_EQ(q.state, HU_OQ_HIDDEN);
     CHECK(!q.entering);
     CHECK_EQ(hu_oq_command_frame(&q), HU_OQ_NONE);
@@ -83,6 +85,7 @@ int main(void) {
     hu_oq_resolution_end(&q);
     CHECK_EQ(run_command_phase(&q, &opened, &pick_frame), 5);
     CHECK_EQ(opened, HU_OQ_OPEN_SWITCH);
+    CHECK_EQ(pick_frame, PICK_FRAME);
 
     /* not queued when the moves finish: dropped */
     hu_oq_z(&q);
@@ -97,7 +100,7 @@ int main(void) {
     hu_oq_a(&q);
     hu_oq_pick(&q, 0);
     hu_oq_resolution_end(&q);
-    for (int f = 0; f < HU_OQ_OPEN_FRAME + 10; f++) hu_oq_command_frame(&q);
+    for (int f = 0; f < OPEN_FRAME; f++) hu_oq_command_frame(&q);
     CHECK(hu_oq_z(&q));
     CHECK(!q.entering);
     CHECK_EQ(q.state, HU_OQ_HIDDEN);
@@ -110,5 +113,18 @@ int main(void) {
     hu_oq_cancel(&q);
     CHECK(!hu_oq_queued(&q));
     CHECK(!hu_oq_visible(&q));
+
+    /* Another port can use different frames; resetting a battle keeps its timing. */
+    hu_oq_init(&q, 1, 4);
+    hu_oq_reset(&q);
+    hu_oq_z(&q);
+    hu_oq_a(&q);
+    hu_oq_pick(&q, 2);
+    hu_oq_resolution_end(&q);
+    CHECK_EQ(hu_oq_command_frame(&q), HU_OQ_OPEN_FIGHT);
+    CHECK_EQ(hu_oq_command_frame(&q), HU_OQ_NONE);
+    CHECK_EQ(hu_oq_command_frame(&q), HU_OQ_NONE);
+    CHECK_EQ(hu_oq_command_frame(&q), HU_OQ_PICK);
+    CHECK_EQ(q.slot, 2);
     TEST_DONE();
 }

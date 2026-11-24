@@ -1,8 +1,8 @@
 #include "hippodrome/order_queue.h"
 
-void hu_oq_init(hu_order_queue* q) {
-    q->open_frame = HU_OQ_OPEN_FRAME;
-    q->pick_frame = HU_OQ_PICK_FRAME;
+void hu_oq_init(hu_order_queue* q, uint16_t open_frame, uint16_t pick_frame) {
+    q->open_frame = open_frame;
+    q->pick_frame = pick_frame;
     hu_oq_reset(q);
 }
 

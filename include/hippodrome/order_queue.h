@@ -1,6 +1,6 @@
 /* Order queueing (docs/specs/ORDER_QUEUEING.md): while the turn's moves play out, the player presses Z to open the
  * command menu and picks their next order (a move, or a Pokémon to switch to). When the next command selection
- * starts, the queued order is entered for them on the COM's timing, unless they cancel it.
+ * starts, the queued order is entered on the timing chosen by the port, unless the player cancels it.
  *
  * The spec's display state machine:
  *
@@ -19,8 +19,7 @@
  *  - if the order becomes illegal (the Pokémon fainted, is frozen or locked into a move, the move ran out of PP, the
  *    party member fainted, ...): the port checks that with its game's rules and calls hu_oq_cancel().
  *
- * Entering the order follows the COM's timing (HU_OQ_OPEN_FRAME, HU_OQ_PICK_FRAME): the menu opens on the open frame
- * and the order is picked on the pick frame, so the player has time to take back a last-second cancel. */
+ * The port chooses when the menu opens and when the queued order is picked. */
 #ifndef HIPPODROME_ORDER_QUEUE_H
 #define HIPPODROME_ORDER_QUEUE_H
 
@@ -40,11 +39,6 @@ typedef enum hu_oq_state {
     HU_OQ_SWITCH_QUEUED,
 } hu_oq_state;
 
-/* The frames after the command selection starts at which a queued order is entered: the Stadium games' COM opens its
- * menu at frame 30 of the command phase and picks at frame 90 (Stadium Zero: BattleScene_ApplyCpuChoice). */
-#define HU_OQ_OPEN_FRAME 30
-#define HU_OQ_PICK_FRAME 90
-
 typedef enum hu_oq_action {
     HU_OQ_NONE = 0,
     HU_OQ_OPEN_FIGHT,   /* enter the fight menu now (the game's A on its command menu) */
@@ -60,9 +54,9 @@ typedef struct hu_order_queue {
     uint16_t open_frame, pick_frame;
 } hu_order_queue;
 
-/* Hidden, nothing queued, COM timing HU_OQ_OPEN_FRAME / HU_OQ_PICK_FRAME. */
-void hu_oq_init(hu_order_queue* q);
-/* Back to Hidden with nothing queued (a battle starts or ends). */
+/* Hidden, nothing queued. The port supplies 1-based command-phase frames: 1 <= open_frame < pick_frame. */
+void hu_oq_init(hu_order_queue* q, uint16_t open_frame, uint16_t pick_frame);
+/* Back to Hidden with nothing queued (a battle starts or ends). Keeps the configured frames. */
 void hu_oq_reset(hu_order_queue* q);
 
 /* Buttons while the moves play out (not during the command selection, where the game's own menu reads them; there
