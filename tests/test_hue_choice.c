@@ -36,6 +36,10 @@ int main(void) {
     CHECK(hu_hue_in_range(HU_HUE_FULL_TURN - 20 * 64, -20, 15)); /* 340 degrees = -20 */
     CHECK(!hu_hue_in_range(16 * 64, -20, 15));
     CHECK(hu_hue_in_range(200 * 64, -180, 180)); /* a full turn allows every hue */
+    /* a range crossing the +-180 wrap point (no species has one; a modded table could): both parts count */
+    CHECK(hu_hue_in_range(175 * 64, 170, -170));
+    CHECK(hu_hue_in_range(-175 * 64, 170, -170));
+    CHECK(!hu_hue_in_range(0, 170, -170));
     CHECK_EQ(hu_hue_clamp(10 * 64, -20, 15), 10 * 64);
     CHECK_EQ(hu_hue_clamp(60 * 64, -20, 15), 15 * 64);
     CHECK_EQ(hu_hue_clamp(HU_HUE_FULL_TURN - 90 * 64, -20, 15), -20 * 64); /* 270 = -90: nearer the bottom */

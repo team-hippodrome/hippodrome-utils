@@ -51,7 +51,8 @@ int hu_hue_degrees(int16_t shift);
  * a full turn or more allows every hue. */
 /* `shift` as a signed hue, -180 degrees (exclusive) to +180 (inclusive): 330 degrees is -30. */
 int16_t hu_hue_signed(int16_t shift);
-/* True when `shift` lies in [min_degrees, max_degrees] (going round the wheel the short way, as hu_hue_signed). */
+/* True when `shift` lies in [min_degrees, max_degrees] (going round the wheel the short way, as hu_hue_signed; a range
+ * crossing the +-180 wrap point counts both parts, though the games' species tables have none). */
 bool hu_hue_in_range(int16_t shift, int16_t min_degrees, int16_t max_degrees);
 /* `shift` moved to the nearer end of the range when it lies outside it (unchanged inside it). */
 int16_t hu_hue_clamp(int16_t shift, int16_t min_degrees, int16_t max_degrees);
