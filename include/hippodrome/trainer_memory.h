@@ -115,6 +115,9 @@ void hu_tm_record_speed(hu_tm* tm, hu_tm_key key, uint8_t species, hu_speed_rang
  * estimate from another range is first adjusted to this one (hu_speed_rescale), which needs the species' base Speed. */
 void hu_tm_record_speed_se(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t base_speed, hu_speed_range range,
                            uint16_t se_min, uint16_t se_max);
+/* Clears any stored speed estimate for `species` (e.g. when the true-Speed failsafe rejects a stale or corrupted
+ * bound). Does nothing if the trainer or Pokémon is absent or has no stored speed estimate. */
+void hu_tm_clear_speed(hu_tm* tm, hu_tm_key key, uint8_t species);
 /* The stored speed estimate as it is with the opponents' stat experience held in [se_min, se_max]: adjusted from the
  * range it was learned under. Returns false (and leaves *out) when there is no estimate. */
 bool hu_tm_mon_speed(const hu_tm_mon* mon, uint8_t base_speed, uint16_t se_min, uint16_t se_max, hu_speed_range* out);

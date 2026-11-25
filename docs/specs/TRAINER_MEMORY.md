@@ -14,7 +14,7 @@ Trainer memory should reveal the following:
 - The trainer's portrait (the picture shown on the VS screen), if the player has met that trainer before
 - Each revealed pokemon's icon
 - Moves the player has seen the pokemon use in battle before, including moves that missed or failed (see the Moves section of ./PARTY_SUMMARY_BARS.md)
-- The speed stat estimate of the pokemon (See ./SPEED_STAT_ESTIMATE)
+- The speed stat estimate of the pokemon (See ./SPEED_STAT_ESTIMATE). If a stored speed estimate contradicts the pokemon's true raw Speed (for example from a stale or corrupted save), it is cleared and reset to the initial range rather than kept.
 
 # Window
 The trainer memory window must not cover any part of the screen that the game draws once and never redraws (such as the header at the top of Stadium Zero's menu before picking pokemon), since that part would keep the window's image after it closes.

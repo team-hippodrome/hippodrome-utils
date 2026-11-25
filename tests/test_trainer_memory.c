@@ -174,6 +174,19 @@ int main(void) {
     uint8_t junk[8] = "garbage";
     CHECK_EQ(hu_tm_deserialize(tm2, junk, sizeof junk), HU_TM_CORRUPT);
 
+    /* Clearing a corrupted speed estimate removes HU_TM_MON_HAS_SPEED without dropping seen moves. */
+    {
+        hu_speed_range out;
+        hu_tm_record_speed_se(tm, k, 95, 70, hu_speed_exact(60), 0, HU_STAT_EXP_MAX);
+        CHECK(hu_tm_mon_speed(hu_tm_find_mon(hu_tm_find(tm, k), 95), 70, 0, HU_STAT_EXP_MAX, &out));
+        hu_tm_clear_speed(tm, k, 95);
+        CHECK(hu_tm_dirty(tm));
+        CHECK(!hu_tm_mon_speed(hu_tm_find_mon(hu_tm_find(tm, k), 95), 70, 0, HU_STAT_EXP_MAX, &out));
+        /* Clearing an absent species or already-cleared mon is a safe no-op. */
+        hu_tm_clear_speed(tm, k, 95);
+        hu_tm_clear_speed(tm, k, 149);
+    }
+
     hu_tm_free(tm2);
     hu_tm_free(tm);
     TEST_DONE();

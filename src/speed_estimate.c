@@ -1,5 +1,7 @@
 #include "hippodrome/speed_estimate.h"
 
+#include <stddef.h>
+
 hu_speed_range hu_speed_initial(uint8_t base_speed, uint8_t level) {
     hu_speed_range r;
     r.min = hu_gb_stat(base_speed, 0, 0, level);
@@ -69,6 +71,19 @@ bool hu_speed_is_exact(hu_speed_range r) {
     return r.min == r.max;
 }
 
+bool hu_speed_contains(hu_speed_range r, uint16_t speed) {
+    return speed >= r.min && speed <= r.max;
+}
+
+hu_speed_range hu_speed_validate(hu_speed_range r, uint16_t true_speed, hu_speed_range fallback, bool* was_reset) {
+    if (hu_speed_contains(r, true_speed)) {
+        if (was_reset != NULL) *was_reset = false;
+        return r;
+    }
+    if (was_reset != NULL) *was_reset = true;
+    return fallback;
+}
+
 /* The effective speed is monotone (non-decreasing) in the raw stat for any rules, so a linear scan over the (at most a
  * few hundred wide) range finds the bound. */
 bool hu_speed_observe(hu_speed_range* r, hu_turn_result result, uint16_t opponent_speed, const hu_speed_rules* rules,
@@ -103,6 +118,23 @@ bool hu_speed_observe(hu_speed_range* r, hu_turn_result result, uint16_t opponen
     }
     r->max = (uint16_t)raw;
     return true;
+}
+
+bool hu_speed_observe_checked(hu_speed_range* r, hu_turn_result result, uint16_t opponent_speed,
+                              const hu_speed_rules* rules, hu_speed_mods mods, uint16_t true_speed,
+                              hu_speed_range fallback, bool* was_reset) {
+    hu_speed_range next = *r;
+    bool changed = hu_speed_observe(&next, result, opponent_speed, rules, mods);
+    if (!hu_speed_contains(next, true_speed)) {
+        *r = fallback;
+        if (was_reset != NULL) *was_reset = true;
+        return false;
+    }
+    if (was_reset != NULL) *was_reset = false;
+    if (changed) {
+        *r = next;
+    }
+    return changed;
 }
 
 hu_speed_range hu_speed_shown(hu_speed_range r, const hu_speed_rules* rules, hu_speed_mods mods) {

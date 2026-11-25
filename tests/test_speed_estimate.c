@@ -101,5 +101,41 @@ int main(void) {
         CHECK_EQ(w.max, full.max);
     }
 
+    /* Failsafe: hu_speed_contains, hu_speed_validate, and hu_speed_observe_checked. */
+    {
+        hu_speed_range fallback = hu_speed_initial(80, 55); /* Dragonite L55: 93-144 */
+        hu_speed_range r = fallback;
+        bool was_reset = true;
+
+        CHECK(hu_speed_contains(fallback, 127));
+        CHECK(!hu_speed_contains(hu_speed_exact(117), 127));
+
+        /* Valid range passes through unchanged. */
+        hu_speed_range v = hu_speed_validate(r, 127, fallback, &was_reset);
+        CHECK(!was_reset);
+        CHECK_EQ(v.min, r.min);
+        CHECK_EQ(v.max, r.max);
+
+        /* Corrupted range (e.g. stale 117-117 when true Speed is 127) resets to fallback. */
+        v = hu_speed_validate(hu_speed_exact(117), 127, fallback, &was_reset);
+        CHECK(was_reset);
+        CHECK_EQ(v.min, fallback.min);
+        CHECK_EQ(v.max, fallback.max);
+
+        /* Normal observation that still contains true Speed narrows without resetting. */
+        CHECK(hu_speed_observe_checked(&r, HU_MOVED_FIRST, 117, &hu_gb_speed_rules, hu_speed_mods_none(), 127,
+                                       fallback, &was_reset));
+        CHECK(!was_reset);
+        CHECK_EQ(r.min, 117);
+        CHECK_EQ(r.max, fallback.max);
+
+        /* Bad observation (e.g. missing paralysis flag) that would exclude true Speed resets to fallback. */
+        CHECK(!hu_speed_observe_checked(&r, HU_MOVED_SECOND, 117, &hu_gb_speed_rules, hu_speed_mods_none(), 127,
+                                        fallback, &was_reset));
+        CHECK(was_reset);
+        CHECK_EQ(r.min, fallback.min);
+        CHECK_EQ(r.max, fallback.max);
+    }
+
     TEST_DONE();
 }

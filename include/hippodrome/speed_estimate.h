@@ -43,6 +43,12 @@ hu_speed_range hu_speed_rescale(hu_speed_range r, uint8_t base_speed, uint8_t le
 hu_speed_range hu_speed_exact(uint16_t speed);
 
 bool hu_speed_is_exact(hu_speed_range r);
+/* True when `speed` lies within [r.min, r.max]. */
+bool hu_speed_contains(hu_speed_range r, uint16_t speed);
+
+/* Failsafe: returns `r` when it contains `true_speed`, or resets to `fallback` otherwise (setting *was_reset when
+ * non-NULL). Prevents stale or corrupted estimates from ever excluding a Pokémon's true raw Speed. */
+hu_speed_range hu_speed_validate(hu_speed_range r, uint16_t true_speed, hu_speed_range fallback, bool* was_reset);
 
 typedef enum hu_turn_result {
     HU_MOVED_FIRST = 0,  /* the subject acted before the opponent */
@@ -56,6 +62,13 @@ typedef enum hu_turn_result {
  * would leave it empty) is ignored and returns false. */
 bool hu_speed_observe(hu_speed_range* r, hu_turn_result result, uint16_t opponent_speed, const hu_speed_rules* rules,
                       hu_speed_mods mods);
+
+/* Runs hu_speed_observe() with a true-Speed failsafe. If the resulting range would exclude `true_speed`, resets *r to
+ * `fallback`, sets *was_reset to true (when non-NULL), and returns false. Otherwise sets *was_reset to false, updates
+ * *r when narrowed, and returns whether *r changed. */
+bool hu_speed_observe_checked(hu_speed_range* r, hu_turn_result result, uint16_t opponent_speed,
+                              const hu_speed_rules* rules, hu_speed_mods mods, uint16_t true_speed,
+                              hu_speed_range fallback, bool* was_reset);
 
 /* The range with the modifiers applied, for display next to the opponent's live speed. */
 hu_speed_range hu_speed_shown(hu_speed_range r, const hu_speed_rules* rules, hu_speed_mods mods);
