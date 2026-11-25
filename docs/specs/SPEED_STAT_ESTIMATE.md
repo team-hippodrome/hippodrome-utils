@@ -15,3 +15,5 @@ The speed stat estimate UI should update on speed increases/decrease and on a po
 The estimate should account for the paralysis speed stat cut. Gen 1 and 2 quarter the speed stat (a right shift by 2) rather halve it, and the estimate must follow the games' own calculation.
 
 The speed stat estimate side file should store the Stat Experience difficult settings it was recorded with and make adjustments according to the stat formula for the game if that setting is found to have changed from a previous save.
+
+Failsafe: the estimate must never narrow to a range that excludes the Pokémon's true raw Speed (for example, narrowing onto an incorrect value due to a bug or a stale Trainer Memory entry). If an initial clamp, a loaded Trainer Memory bound, or a turn-order observation would leave the true raw Speed outside `[min, max]`, the estimate resets to the Pokémon's initial range and clears any corrupted stored speed estimate in Trainer Memory without revealing the true Speed.

@@ -248,6 +248,20 @@ void hu_tm_record_speed_se(hu_tm* tm, hu_tm_key key, uint8_t species, uint8_t ba
     }
 }
 
+void hu_tm_clear_speed(hu_tm* tm, hu_tm_key key, uint8_t species) {
+    hu_tm_trainer* t = (hu_tm_trainer*)hu_tm_find(tm, key);
+    hu_tm_mon* m = t ? (hu_tm_mon*)hu_tm_find_mon(t, species) : NULL;
+    if (m == NULL || !(m->flags & HU_TM_MON_HAS_SPEED)) {
+        return;
+    }
+    m->flags &= (uint8_t)~HU_TM_MON_HAS_SPEED;
+    m->speed.min = 0;
+    m->speed.max = 0;
+    m->se_min = 0;
+    m->se_max = HU_STAT_EXP_MAX;
+    tm->dirty = true;
+}
+
 bool hu_tm_mon_speed(const hu_tm_mon* mon, uint8_t base_speed, uint16_t se_min, uint16_t se_max, hu_speed_range* out) {
     if (mon == NULL || !(mon->flags & HU_TM_MON_HAS_SPEED)) {
         return false;
