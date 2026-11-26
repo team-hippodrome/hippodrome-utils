@@ -1,8 +1,9 @@
 # What it is
 The Mewtwo fight is quite easy in stadium 1 as despite how powerful Mewtwo is; a party of 6 is going to overwhelm any one pokemon. Thus, this enhancement makes Mewtwo harder.
 
-## Cannot be frozen or put to sleep
-Mewtwo cannot be frozen or put to sleep. Burn, poison, and paralysis can be applied to mewtwo.
+# Modifications 
+## Cannot be frozen
+Mewtwo cannot be frozen. Burn, Sleep, Poison, and Paralysis can be applied to mewtwo.
 
 ## Expanded Move set
 Mewtwo's move set is expanded to 12 moves:
@@ -29,6 +30,8 @@ To keep the surprise to the players that don't spoil themselves: Mewtwo's summar
 ## Round 2 Only: Two moves per turn
 In Round 2, in addition to its expanded moveset; Mewtwo can move twice per turn.
 
-Mewtwo's AI should process each of its two moves separately. That is to say: the second move is given the battle state after the first move as input. 
+Mewtwo's AI should process each of its two moves separately. That is to say: the second move is given the battle state after the first move as input.
 
-If a Pokemon faints, all of Mewtwo's remaining moves are canceled. 
+The turn order can never be Mewtwo -> Player -> Mewtwo. If Mewtwo uses heal bell to heal paralysis on its first turn 1, either it already outspeed the player or was outspeeded by the player. 
+
+If a Pokemon faints, all of Mewtwo's remaining moves are canceled.
