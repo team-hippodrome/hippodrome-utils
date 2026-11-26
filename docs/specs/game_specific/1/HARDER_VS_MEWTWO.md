@@ -35,3 +35,6 @@ Mewtwo's AI should process each of its two moves separately. That is to say: the
 The turn order can never be Mewtwo -> Player -> Mewtwo. If Mewtwo uses heal bell to heal paralysis on its first turn 1, either it already outspeed the player or was outspeeded by the player. 
 
 If a Pokemon faints, all of Mewtwo's remaining moves are canceled.
+
+## AI Logic
+See [MEWTWO_AI_RULES.md](./MEWTWO_AI_RULES.md)
