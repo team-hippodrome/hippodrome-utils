@@ -1,0 +1,6 @@
+sim
+data/pokered/
+data/*.html
+__pycache__/
+*.log
+data/pokestadium/
