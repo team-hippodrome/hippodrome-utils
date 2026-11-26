@@ -22,6 +22,9 @@ Mewtwo's move set is expanded to 12 moves:
 
 Heal Bell should be implemented as a move that cures status conditions. Mewtwo only started being able to use Earthquake in gen 3 so the illegality marking code needs a special exception for this fight.
 
+Heal Bell's animation should be crafted from scratch (a golden bell ringing a smooth melody).
+
+
 Heal bell should also clear volatile status conditions like leech seed and confusion. 
 
 ### Summary Bar and Trainer Memory behavior for Mewtwo
@@ -35,6 +38,8 @@ Mewtwo's AI should process each of its two moves separately. That is to say: the
 The turn order can never be Mewtwo -> Player -> Mewtwo. If Mewtwo uses heal bell to heal paralysis on its first turn 1, either it already outspeed the player or was outspeeded by the player. 
 
 If a Pokemon faints, all of Mewtwo's remaining moves are canceled.
+
+When Mewtwo skips its second move, the caption "MEWTWO is watching {trainer's active pokemon} carefully" should display.
 
 ## AI Logic
 See [MEWTWO_AI_RULES.md](./MEWTWO_AI_RULES.md). The labels in the launcher for the settings should be:
