@@ -37,4 +37,9 @@ The turn order can never be Mewtwo -> Player -> Mewtwo. If Mewtwo uses heal bell
 If a Pokemon faints, all of Mewtwo's remaining moves are canceled.
 
 ## AI Logic
-See [MEWTWO_AI_RULES.md](./MEWTWO_AI_RULES.md)
+See [MEWTWO_AI_RULES.md](./MEWTWO_AI_RULES.md). The labels in the launcher for the settings should be:
+- Easy: 10%
+- Medium: 30%
+- Hard: 50%
+- Lunatic: 80%
+- Kaizo: No blunders and no move skips.
