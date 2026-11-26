@@ -1,0 +1,420 @@
+{
+ "10": {
+  "target": 0.1,
+  "level": 0.062264150943396254,
+  "rules": {
+   "baseline": 0,
+   "damage_roll": 236,
+   "p_cure_paralysis": 76,
+   "p_cure_sleep_move": 0,
+   "p_cure_poison": 256,
+   "p_cure_other": 256,
+   "p_knockout": 136,
+   "heal_below": 128,
+   "p_heal": 136,
+   "p_substitute": 76,
+   "substitute_min_hp": 96,
+   "p_paralyze": 256,
+   "p_reflect": 256,
+   "reflect_threat": 64,
+   "p_mist": 256,
+   "p_amnesia": 256,
+   "amnesia_max_stage": 10,
+   "amnesia_safe": 64,
+   "p_blunder": 150,
+   "p_second_blunder": 0,
+   "pass_second": 224,
+   "p_second_attack": 0
+  },
+  "team": [
+   "Magneton",
+   "Pinsir",
+   "Clefable",
+   "Chansey",
+   "Rhydon",
+   "Drowzee"
+  ],
+  "team_indices": [
+   81,
+   126,
+   35,
+   112,
+   111,
+   95
+  ],
+  "mewtwo_vs_perfect": 0.09066666666666667,
+  "ci": [
+   0.07716225777682216,
+   0.1062623794988058
+  ],
+  "heuristic_player_win": 0.8998333333333334,
+  "rollout_player_win": 0.9093333333333333,
+  "gauntlet": {
+   "A_vanilla_cheese": {
+    "heuristic_mewtwo": 0.20274999999999999,
+    "rollout_mewtwo": 0.20999999999999996,
+    "mewtwo_vs_best_play": 0.20274999999999999
+   },
+   "B_boom_offense": {
+    "heuristic_mewtwo": 0.45775,
+    "rollout_mewtwo": 0.43999999999999995,
+    "mewtwo_vs_best_play": 0.43999999999999995
+   },
+   "C_standard_strong": {
+    "heuristic_mewtwo": 0.5385,
+    "rollout_mewtwo": 0.45666666666666667,
+    "mewtwo_vs_best_play": 0.45666666666666667
+   },
+   "C2_standard_lapras": {
+    "heuristic_mewtwo": 0.5780000000000001,
+    "rollout_mewtwo": 0.5233333333333333,
+    "mewtwo_vs_best_play": 0.5233333333333333
+   },
+   "D_debuff_stall": {
+    "heuristic_mewtwo": 0.52825,
+    "rollout_mewtwo": 0.5133333333333333,
+    "mewtwo_vs_best_play": 0.5133333333333333
+   },
+   "E_wrap_lock": {
+    "heuristic_mewtwo": 0.5455,
+    "rollout_mewtwo": 0.51,
+    "mewtwo_vs_best_play": 0.51
+   },
+   "F_sleep_para": {
+    "heuristic_mewtwo": 0.43500000000000005,
+    "rollout_mewtwo": 0.4066666666666666,
+    "mewtwo_vs_best_play": 0.4066666666666666
+   }
+  },
+  "seconds": 455.65880584716797
+ },
+ "30": {
+  "target": 0.3,
+  "level": 0.1680188679245283,
+  "rules": {
+   "baseline": 0,
+   "damage_roll": 236,
+   "p_cure_paralysis": 96,
+   "p_cure_sleep_move": 0,
+   "p_cure_poison": 256,
+   "p_cure_other": 256,
+   "p_knockout": 150,
+   "heal_below": 128,
+   "p_heal": 150,
+   "p_substitute": 96,
+   "substitute_min_hp": 96,
+   "p_paralyze": 256,
+   "p_reflect": 256,
+   "reflect_threat": 64,
+   "p_mist": 256,
+   "p_amnesia": 256,
+   "amnesia_max_stage": 10,
+   "amnesia_safe": 64,
+   "p_blunder": 133,
+   "p_second_blunder": 0,
+   "pass_second": 170,
+   "p_second_attack": 0
+  },
+  "team": [
+   "Moltres",
+   "Magneton",
+   "Pinsir",
+   "Drowzee",
+   "Farfetch'd",
+   "Chansey"
+  ],
+  "team_indices": [
+   145,
+   81,
+   126,
+   95,
+   82,
+   112
+  ],
+  "mewtwo_vs_perfect": 0.27616666666666667,
+  "ci": [
+   0.2649994037710694,
+   0.2876203722070309
+  ],
+  "heuristic_player_win": 0.7238333333333333,
+  "rollout_player_win": 0.7153333333333334,
+  "gauntlet": {
+   "A_vanilla_cheese": {
+    "heuristic_mewtwo": 0.4475,
+    "rollout_mewtwo": 0.44999999999999996,
+    "mewtwo_vs_best_play": 0.4475
+   },
+   "B_boom_offense": {
+    "heuristic_mewtwo": 0.728,
+    "rollout_mewtwo": 0.69,
+    "mewtwo_vs_best_play": 0.69
+   },
+   "C_standard_strong": {
+    "heuristic_mewtwo": 0.7595000000000001,
+    "rollout_mewtwo": 0.7066666666666667,
+    "mewtwo_vs_best_play": 0.7066666666666667
+   },
+   "C2_standard_lapras": {
+    "heuristic_mewtwo": 0.8009999999999999,
+    "rollout_mewtwo": 0.7633333333333333,
+    "mewtwo_vs_best_play": 0.7633333333333333
+   },
+   "D_debuff_stall": {
+    "heuristic_mewtwo": 0.7975,
+    "rollout_mewtwo": 0.7666666666666666,
+    "mewtwo_vs_best_play": 0.7666666666666666
+   },
+   "E_wrap_lock": {
+    "heuristic_mewtwo": 0.7895,
+    "rollout_mewtwo": 0.8133333333333334,
+    "mewtwo_vs_best_play": 0.7895
+   },
+   "F_sleep_para": {
+    "heuristic_mewtwo": 0.75325,
+    "rollout_mewtwo": 0.7333333333333334,
+    "mewtwo_vs_best_play": 0.7333333333333334
+   }
+  },
+  "seconds": 997.0681054592133
+ },
+ "50": {
+  "target": 0.5,
+  "level": 0.2695870831127581,
+  "rules": {
+   "baseline": 0,
+   "damage_roll": 236,
+   "p_cure_paralysis": 116,
+   "p_cure_sleep_move": 0,
+   "p_cure_poison": 256,
+   "p_cure_other": 256,
+   "p_knockout": 163,
+   "heal_below": 128,
+   "p_heal": 163,
+   "p_substitute": 116,
+   "substitute_min_hp": 96,
+   "p_paralyze": 256,
+   "p_reflect": 256,
+   "reflect_threat": 64,
+   "p_mist": 256,
+   "p_amnesia": 256,
+   "amnesia_max_stage": 10,
+   "amnesia_safe": 64,
+   "p_blunder": 117,
+   "p_second_blunder": 0,
+   "pass_second": 118,
+   "p_second_attack": 0
+  },
+  "team": [
+   "Zapdos",
+   "Pinsir",
+   "Rhydon",
+   "Farfetch'd",
+   "Magneton",
+   "Moltres"
+  ],
+  "team_indices": [
+   144,
+   126,
+   111,
+   82,
+   81,
+   145
+  ],
+  "mewtwo_vs_perfect": 0.534,
+  "ci": [
+   0.5213598041703281,
+   0.5465966855545173
+  ],
+  "heuristic_player_win": 0.466,
+  "rollout_player_win": 0.458,
+  "gauntlet": {
+   "A_vanilla_cheese": {
+    "heuristic_mewtwo": 0.70375,
+    "rollout_mewtwo": 0.73,
+    "mewtwo_vs_best_play": 0.70375
+   },
+   "B_boom_offense": {
+    "heuristic_mewtwo": 0.90175,
+    "rollout_mewtwo": 0.8966666666666667,
+    "mewtwo_vs_best_play": 0.8966666666666667
+   },
+   "C_standard_strong": {
+    "heuristic_mewtwo": 0.89775,
+    "rollout_mewtwo": 0.8566666666666667,
+    "mewtwo_vs_best_play": 0.8566666666666667
+   },
+   "C2_standard_lapras": {
+    "heuristic_mewtwo": 0.91975,
+    "rollout_mewtwo": 0.9,
+    "mewtwo_vs_best_play": 0.9
+   },
+   "D_debuff_stall": {
+    "heuristic_mewtwo": 0.94,
+    "rollout_mewtwo": 0.92,
+    "mewtwo_vs_best_play": 0.92
+   },
+   "E_wrap_lock": {
+    "heuristic_mewtwo": 0.9245,
+    "rollout_mewtwo": 0.9,
+    "mewtwo_vs_best_play": 0.9
+   },
+   "F_sleep_para": {
+    "heuristic_mewtwo": 0.9235,
+    "rollout_mewtwo": 0.9166666666666666,
+    "mewtwo_vs_best_play": 0.9166666666666666
+   }
+  },
+  "seconds": 1074.4583985805511
+ },
+ "80": {
+  "target": 0.8,
+  "level": 0.41649746192893405,
+  "rules": {
+   "baseline": 0,
+   "damage_roll": 236,
+   "p_cure_paralysis": 144,
+   "p_cure_sleep_move": 0,
+   "p_cure_poison": 256,
+   "p_cure_other": 256,
+   "p_knockout": 181,
+   "heal_below": 128,
+   "p_heal": 181,
+   "p_substitute": 144,
+   "substitute_min_hp": 96,
+   "p_paralyze": 256,
+   "p_reflect": 256,
+   "reflect_threat": 64,
+   "p_mist": 256,
+   "p_amnesia": 256,
+   "amnesia_max_stage": 10,
+   "amnesia_safe": 64,
+   "p_blunder": 93,
+   "p_second_blunder": 0,
+   "pass_second": 43,
+   "p_second_attack": 0
+  },
+  "team": [
+   "Zapdos",
+   "Moltres",
+   "Vaporeon",
+   "Pinsir",
+   "Farfetch'd",
+   "Persian"
+  ],
+  "team_indices": [
+   144,
+   145,
+   133,
+   126,
+   82,
+   52
+  ],
+  "mewtwo_vs_perfect": 0.7793333333333333,
+  "ci": [
+   0.7576479287146299,
+   0.7995916103432069
+  ],
+  "heuristic_player_win": 0.20033333333333334,
+  "rollout_player_win": 0.22066666666666668,
+  "gauntlet": {
+   "A_vanilla_cheese": {
+    "heuristic_mewtwo": 0.9117500000000001,
+    "rollout_mewtwo": 0.8866666666666667,
+    "mewtwo_vs_best_play": 0.8866666666666667
+   },
+   "B_boom_offense": {
+    "heuristic_mewtwo": 0.98225,
+    "rollout_mewtwo": 0.98,
+    "mewtwo_vs_best_play": 0.98
+   },
+   "C_standard_strong": {
+    "heuristic_mewtwo": 0.9775,
+    "rollout_mewtwo": 0.96,
+    "mewtwo_vs_best_play": 0.96
+   },
+   "C2_standard_lapras": {
+    "heuristic_mewtwo": 0.98175,
+    "rollout_mewtwo": 0.9733333333333334,
+    "mewtwo_vs_best_play": 0.9733333333333334
+   },
+   "D_debuff_stall": {
+    "heuristic_mewtwo": 0.99375,
+    "rollout_mewtwo": 0.9866666666666667,
+    "mewtwo_vs_best_play": 0.9866666666666667
+   },
+   "E_wrap_lock": {
+    "heuristic_mewtwo": 0.99275,
+    "rollout_mewtwo": 0.99,
+    "mewtwo_vs_best_play": 0.99
+   },
+   "F_sleep_para": {
+    "heuristic_mewtwo": 0.9945,
+    "rollout_mewtwo": 0.9966666666666667,
+    "mewtwo_vs_best_play": 0.9945
+   }
+  },
+  "seconds": 631.4800219535828
+ },
+ "baseline": {
+  "rules": {
+   "baseline": 1,
+   "damage_roll": 236,
+   "p_cure_paralysis": 0,
+   "p_cure_sleep_move": 0,
+   "p_cure_poison": 0,
+   "p_cure_other": 0,
+   "p_knockout": 0,
+   "heal_below": 0,
+   "p_heal": 0,
+   "p_substitute": 0,
+   "substitute_min_hp": 0,
+   "p_paralyze": 0,
+   "p_reflect": 0,
+   "reflect_threat": 0,
+   "p_mist": 0,
+   "p_amnesia": 0,
+   "amnesia_max_stage": 0,
+   "amnesia_safe": 0,
+   "p_blunder": 0,
+   "p_second_blunder": 0,
+   "pass_second": 0,
+   "p_second_attack": 256
+  },
+  "team": [
+   "Clefable",
+   "Rattata",
+   "Clefairy",
+   "Pinsir",
+   "Magneton",
+   "Farfetch'd"
+  ],
+  "mewtwo_vs_perfect": 0.815,
+  "ci": [
+   0.786609144756125,
+   0.8403800531156944
+  ],
+  "gauntlet": {
+   "A_vanilla_cheese": {
+    "heuristic_mewtwo": 0.89025
+   },
+   "B_boom_offense": {
+    "heuristic_mewtwo": 0.996
+   },
+   "C_standard_strong": {
+    "heuristic_mewtwo": 0.99875
+   },
+   "C2_standard_lapras": {
+    "heuristic_mewtwo": 1.0
+   },
+   "D_debuff_stall": {
+    "heuristic_mewtwo": 0.99725
+   },
+   "E_wrap_lock": {
+    "heuristic_mewtwo": 1.0
+   },
+   "F_sleep_para": {
+    "heuristic_mewtwo": 0.99725
+   }
+  }
+ }
+}
