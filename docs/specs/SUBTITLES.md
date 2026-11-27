@@ -171,3 +171,8 @@ Because the backend is a port choice, the font hook stays in each port and is no
    state.
 6. Plug in the ROM font backend for the three font calls.
 7. Add the Options toggle stored as a CVar, and a `PORT_SUBTITLE_TEST` style debug aid for headless checks.
+
+The Subtitles option can have three values
+- Off: No subtitles ever.
+- Non-native only: Only display subtitles where the game language is different from the announcer language.
+- On: Always display subtitles. 
