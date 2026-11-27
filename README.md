@@ -37,3 +37,10 @@ ctest --test-dir build --output-on-failure
 ```
 
 The tests build only when this is the top-level project (`HIPPODROME_UTILS_TESTS`).
+
+## Porting notes
+
+[docs/porting](docs/porting/README.md) collects what we learned getting plethron and stadion to match the N64: the
+bug classes (struct offsets, 32-bit pointers, byte order, the data lifter, renderer differences, Windows-only bugs),
+how to build and drive ares headless as the reference and diff the port against it, and the branching rules. Start
+there before porting another Stadium game.
