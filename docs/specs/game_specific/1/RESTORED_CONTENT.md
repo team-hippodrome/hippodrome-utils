@@ -22,6 +22,7 @@ The Mewtwo battle is unlocked when ALL of the following are cleared:
 - Petite Cup
 - Pika Cup
 - Prime Cup Master Ball 
+- Gym Leader Castle
 - AND Either:
   - Nintendo Cup 99 Master Ball
   - Poke Cup Master Ball
