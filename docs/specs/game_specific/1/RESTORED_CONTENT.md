@@ -31,7 +31,7 @@ The Mewtwo battle is unlocked when ALL of the following are cleared:
     - Nintendo Cup 99 Ultra Ball
 
 The Doduo Tower is unlocked when ANY of the following are clears:
-- Prime Cup 
+- Prime Cup Master Ball
 - Nintendo Cup 99 Master Ball
 - Poke Cup Master Ball
 - or ALL OF THE FOLLOWING:
